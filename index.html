@@ -3,17 +3,13 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Circle Clicker — revamp</title>
+<title>Circle Clicker — Revamp</title>
 <style>
-  /* Minimal styling — kept intentionally light per request */
   :root{--bg:#f2f2f2;--card:#fff;--muted:#ddd}
   body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#111;min-height:100vh;display:flex;gap:10px}
-  /* Desktop: 3 columns. Mobile stacks */
   .column{flex:1;padding:12px;box-sizing:border-box}
   @media (max-width:900px){body{flex-direction:column}}
-  /* Game area (left) */
   #game-column{display:flex;flex-direction:column;align-items:center}
-  /* push circle area lower from top */
   #game-inner{margin-top:80px;width:100%;display:flex;flex-direction:column;align-items:center}
   #clicks{font-size:18px;margin:6px 0}
   #cps{font-size:14px;margin:3px 0;color:#333}
@@ -21,41 +17,35 @@
   #click-circle{position:absolute;top:50%;left:50%;width:120px;height:120px;border-radius:50%;background:black;transform:translate(-50%,-50%) scale(1);cursor:pointer;transition:transform 0.06s linear}
   #cursor-container{position:absolute;top:50%;left:50%;width:0;height:0;transform:translate(-50%,-50%)}
   .cursor{position:absolute;width:32px;height:32px;transform-origin:center center;pointer-events:none}
-  /* Middle column - info / buttons */
   #middle-buttons{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
   #info-display{background:var(--card);padding:10px;border-radius:8px;min-height:200px;max-height:60vh;overflow:auto}
   button{background:var(--card);border:1px solid #aaa;padding:7px 10px;border-radius:6px;cursor:pointer}
-  /* Right column - store/upgrades */
   .panel{background:var(--card);padding:10px;border-radius:8px}
   .store-row,.upgrade-row{display:flex;align-items:center;justify-content:space-between;padding:6px;border-radius:6px;margin:6px 0;background:var(--muted)}
   .store-left{display:flex;align-items:center;gap:8px}
   .smallimg{width:38px;height:38px;object-fit:contain}
   .count{min-width:36px;text-align:center}
-  /* Popup overlay */
   #popup-bg{display:none;position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;z-index:999}
   #popup{background:white;color:#111;padding:16px;border-radius:10px;max-width:92%;width:320px}
   #popup img{width:48px;height:48px;display:block;margin:0 auto 8px}
-  /* disabled look */
   .locked{opacity:0.5;pointer-events:none}
-  /* tiny note */
-  .note{font-size:12px;color:#444;margin-top:6px}
 </style>
 </head>
 <body>
 
-<!-- LEFT: Game -->
+<!-- LEFT -->
 <div class="column" id="game-column">
   <div id="game-inner">
     <div id="clicks">Clicks: 0</div>
     <div id="cps">CPS: 0.0</div>
     <div id="game-container">
-      <div id="click-circle" title="Click me"></div>
+      <div id="click-circle"></div>
       <div id="cursor-container"></div>
     </div>
   </div>
 </div>
 
-<!-- MIDDLE: Info / Buttons -->
+<!-- MIDDLE -->
 <div class="column">
   <div id="middle-buttons">
     <button id="btn-updates">Updates</button>
@@ -64,447 +54,182 @@
   <div id="info-display"></div>
 </div>
 
-<!-- RIGHT: Store & Upgrades -->
+<!-- RIGHT -->
 <div class="column">
-  <div class="panel" id="upgrades-panel">
-    <h3>Upgrades</h3>
-    <div id="upgrade-list"></div>
-  </div>
-
-  <div class="panel" id="store-panel" style="margin-top:12px">
+  <div class="panel" id="store-panel">
     <h3>Store</h3>
 
-    <div class="store-row" id="store-cursor" onclick="buyStoreItem('cursor')">
+    <!-- Store Items -->
+    <div class="store-row" id="store-cursor">
       <div class="store-left">
-        <img id="store-cursor-img" class="smallimg" alt="cursor icon">
-        <div>
-          <div><strong>Cursor</strong></div>
-          <div style="font-size:12px">+0.1 CPS each</div>
-        </div>
+        <img class="smallimg" id="store-cursor-img">
+        <div><strong>Cursor</strong><div style="font-size:12px">A simple cursor.</div></div>
       </div>
       <div>
-        <button id="buy-cursor-btn">Buy</button>
+        <button id="buy-cursor-btn">Buy (15)</button>
         <div class="count" id="cursor-count">0</div>
       </div>
     </div>
 
-    <div class="store-row" id="store-grandma" onclick="buyStoreItem('grandma')">
+    <div class="store-row" id="store-grandma">
       <div class="store-left">
-        <img id="store-grandma-img" class="smallimg" alt="grandma icon">
-        <div>
-          <div><strong>Grandma</strong></div>
-          <div style="font-size:12px">+1.0 CPS each (grandmas don't orbit)</div>
-        </div>
+        <img class="smallimg" id="store-grandma-img">
+        <div><strong>Grandma</strong><div style="font-size:12px">They click for you.</div></div>
       </div>
       <div>
-        <button id="buy-grandma-btn">Buy</button>
+        <button id="buy-grandma-btn">Buy (100)</button>
         <div class="count" id="grandma-count">0</div>
       </div>
     </div>
 
-    <div class="note">Prices shown when you open the panel or buy. Tap items to buy. Mobile friendly.</div>
-  </div>
-</div>
-
-<!-- POPUP -->
-<div id="popup-bg" onclick="if(event.target===this) closePopup()">
-  <div id="popup" role="dialog" aria-modal="true">
-    <img id="popup-icon" alt="" />
-    <h3 id="popup-title"></h3>
-    <div id="popup-desc" style="margin:8px 0"></div>
-    <div id="popup-effect" style="font-weight:600;margin-bottom:6px"></div>
-    <div>Cost: <span id="popup-cost"></span> clicks</div>
-    <div style="display:flex;gap:8px;margin-top:10px;justify-content:center">
-      <button id="popup-buy">Buy</button>
-      <button onclick="closePopup()">Cancel</button>
+    <div class="store-row" id="store-farm">
+      <div class="store-left">
+        <img class="smallimg" id="store-farm-img">
+        <div><strong>Farm</strong><div style="font-size:12px">Grow clicks somehow!</div></div>
+      </div>
+      <div>
+        <button id="buy-farm-btn">Buy (1100)</button>
+        <div class="count" id="farm-count">0</div>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
-/* -------------------------
-   Data & initial config
-   ------------------------- */
-const cursorOrbitImg = "https://images.vexels.com/media/users/3/131773/isolated/svg/790c78d39fd853ae72167411aa11d727.svg";
-/* fallback inline svg data URIs for any image load failure */
-const fallbackCursorSVG = 'data:image/svg+xml;utf8,' + encodeURIComponent(
-  `<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 24 24'>
-     <circle cx='12' cy='12' r='10' fill='#333'/>
-     <path d='M7 7 L17 12 L7 17 Z' fill='#fff'/>
-   </svg>`
-);
-const fallbackGrandmaSVG = 'data:image/svg+xml;utf8,' + encodeURIComponent(
-  `<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 24 24'>
-     <rect x='3' y='3' width='18' height='18' rx='4' fill='#c88'/>
-     <circle cx='12' cy='11' r='3' fill='#fff'/>
-   </svg>`
-);
-
-/* store item definitions */
-let state = {
+/* --- GAME STATE --- */
+const state = {
   clicks: 0,
   cursors: 0,
   grandmas: 0,
+  farms: 0,
   cursorCost: 15,
   grandmaCost: 100,
+  farmCost: 1100,
   baseCursorCPS: 0.1,
   baseGrandmaCPS: 1,
-  multiplier_cursor: 1, // multiplied by upgrades
-  multiplier_grandma: 1,
-  upgrades: [], // will populate below
-  thousandFingersBonus: 0 // added CPS per non-cursor item from Thousand Fingers
+  baseFarmCPS: 8
 };
 
-/* Upgrades list (cursor + grandmas). "type" used for display */
-state.upgrades = [
-  { id: 'rif', name: 'Reinforced Index Finger', desc: 'Doubles cursor effectiveness.', cost: 100, reqType: 'cursor', reqCount: 1, icon: 'https://static.wikia.nocookie.net/cookieclicker/images/d/d2/Plain_cursor.png', bought:false, apply:()=>{ state.multiplier_cursor *= 2 } },
-  { id: 'cream', name: 'Carpal Tunnel Prevention Cream', desc: 'Doubles cursor effectiveness again.', cost: 500, reqType: 'cursor', reqCount: 1, icon: 'https://static.wikia.nocookie.net/cookieclicker/images/0/01/Berrylium_cursor.png', bought:false, apply:()=>{ state.multiplier_cursor *= 2 } }, // icon intentionally set different to avoid reuse issues; fallback applied if fails
-  { id: 'ambi', name: 'Ambidextrous', desc: 'Doubles cursor effectiveness once more.', cost: 10000, reqType: 'cursor', reqCount: 10, icon: 'https://static.wikia.nocookie.net/cookieclicker/images/2/2e/Blueberrylium_cursor.png', bought:false, apply:()=>{ state.multiplier_cursor *= 2 } },
-
-  // Grandma upgrades
-  { id:'g1', name:'Forwards from grandma', desc:'Doubles grandma effectiveness.', cost:1000, reqType:'grandma', reqCount:1, icon:'https://static.wikia.nocookie.net/cookieclicker/images/0/00/Plain_grandma.png', bought:false, apply:()=>{ state.multiplier_grandma *= 2 } },
-  { id:'g2', name:'Steel-plated rolling pins', desc:'Doubles grandma effectiveness.', cost:5000, reqType:'grandma', reqCount:5, icon:'https://static.wikia.nocookie.net/cookieclicker/images/d/dc/Berrylium_grandma.png', bought:false, apply:()=>{ state.multiplier_grandma *= 2 } },
-  { id:'g3', name:'Lubricated dentures', desc:'Doubles grandma effectiveness.', cost:50000, reqType:'grandma', reqCount:25, icon:'https://static.wikia.nocookie.net/cookieclicker/images/2/2a/Blueberrylium_grandma.png', bought:false, apply:()=>{ state.multiplier_grandma *= 2 } },
-
-  // New cursor upgrade: Thousand Fingers
-  { id:'thousand', name:'Thousand Fingers', desc:'For every non-cursor store item owned, add +0.1 CPS to overall CPS.', cost:100000, reqType:'cursor', reqCount:25, icon:'https://static.wikia.nocookie.net/cookieclicker/images/a/a9/Chalcedhoney_cursor.png', bought:false, apply:()=>{
-      // compute bonus at time of purchase and then keep it dynamic by recalculating when items change
-      state.thousandFingersBought = true;
-    }
-  }
-];
-
-/* Elements */
+/* --- ELEMENTS --- */
 const clickCircle = document.getElementById('click-circle');
+const cursorContainer = document.getElementById('cursor-container');
 const clickCountEl = document.getElementById('clicks');
 const cpsEl = document.getElementById('cps');
-const cursorContainer = document.getElementById('cursor-container');
-const upgradeListEl = document.getElementById('upgrade-list');
-const infoDisplay = document.getElementById('info-display');
 
-/* store images - set to the same image used around circle for cursor store item */
-const storeCursorImgEl = document.getElementById('store-cursor-img');
-const storeGrandmaImgEl = document.getElementById('store-grandma-img');
+/* --- STORE IMAGES --- */
+document.getElementById("store-cursor-img").src = "https://static.wikia.nocookie.net/cookieclicker/images/d/d2/Plain_cursor.png";
+document.getElementById("store-grandma-img").src = "https://static.wikia.nocookie.net/cookieclicker/images/a/a0/GrandmaIconTransparent.png";
+document.getElementById("store-farm-img").src = "https://static.wikia.nocookie.net/cookieclicker/images/2/23/Plain_farm.png";
 
-/* popup */
-const popupBg = document.getElementById('popup-bg');
-const popupTitle = document.getElementById('popup-title');
-const popupDesc = document.getElementById('popup-desc');
-const popupCost = document.getElementById('popup-cost');
-const popupEffect = document.getElementById('popup-effect');
-const popupBuyBtn = document.getElementById('popup-buy');
-const popupIcon = document.getElementById('popup-icon');
+/* --- ADD CURSOR ORBIT --- */
+function addOrbitingCursor() {
+  const img = document.createElement("img");
+  img.className = "cursor";
+  img.src = document.getElementById("store-cursor-img").src;
+  cursorContainer.appendChild(img);
+}
 
-/* load images safely (preload with fallback) */
-function safePreload(url, fallback){
-  return new Promise(resolve=>{
-    const img = new Image();
-    img.onload = ()=>resolve(url);
-    img.onerror = ()=>resolve(fallback);
-    img.src = url;
+/* --- POSITION CURSORS --- */
+function positionCursors(angleOffset) {
+  const cursors = Array.from(cursorContainer.children);
+  const radius = 70; // closer to the circle
+  const count = cursors.length;
+  cursors.forEach((cursor, i) => {
+    const angle = (i / count) * Math.PI * 2 + angleOffset;
+    const x = Math.cos(angle) * radius;
+    const y = Math.sin(angle) * radius;
+    cursor.style.left = `${x - 16}px`;
+    cursor.style.top = `${y - 16}px`;
+    const rotationDeg = (angle * 180 / Math.PI) + 90; // ensure it faces the circle
+    cursor.style.transform = `rotate(${rotationDeg}deg)`;
   });
 }
 
-/* initialize store icons with safe preload */
-(async function initIcons(){
-  const cursorSrc = await safePreload(cursorOrbitImg, fallbackCursorSVG);
-  storeCursorImgEl.src = cursorSrc;
-  // attempt the online grandma icon, fallback to inline if that fails
-  const grandmaIconUrl = 'https://static.wikia.nocookie.net/cookieclicker/images/a/a0/GrandmaIconTransparent.png';
-  const grandmaSrc = await safePreload(grandmaIconUrl, fallbackGrandmaSVG);
-  storeGrandmaImgEl.src = grandmaSrc;
-
-  // pre-load upgrade icons but don't block the UI; store result in each upgrade object
-  state.upgrades.forEach(async (u) => {
-    const ok = await safePreload(u.icon, (u.icon.includes('cursor')?fallbackCursorSVG: fallbackGrandmaSVG));
-    u.safeIcon = ok;
-  });
-
-  renderUpgradeList();
-})();
-
-/* -------------------------
-   Helper functions
-   ------------------------- */
-function getCPS(){
-  // cursor cps (per cursor): baseCursorCPS * multiplier_cursor
-  const perCursor = state.baseCursorCPS * state.multiplier_cursor;
-  const cursorCPS = state.cursors * perCursor;
-
-  // grandma cps: baseGrandmaCPS * multiplier_grandma
-  const grandmaCPS = state.grandmas * state.baseGrandmaCPS * state.multiplier_grandma;
-
-  // thousand fingers extra: if purchased, adds 0.1 CPS per non-cursor store item owned (grandmas only for now)
-  let thousandBonus = 0;
-  if (state.upgrades.find(u=>u.id==='thousand').bought){
-    // count non-cursor store items (only grandmas exist now)
-    const nonCursorCount = state.grandmas; // expand if more items added later
-    thousandBonus = nonCursorCount * 0.1;
-  }
-
-  return cursorCPS + grandmaCPS + thousandBonus;
-}
-
-function updateDisplay(){
-  clickCountEl.textContent = 'Clicks: ' + Math.floor(state.clicks);
-  const cps = getCPS();
-  cpsEl.textContent = 'CPS: ' + cps.toFixed(2);
-  document.getElementById('cursor-count').textContent = state.cursors;
-  document.getElementById('grandma-count').textContent = state.grandmas;
-  // update buy buttons prices display
-  document.getElementById('buy-cursor-btn').textContent = `Buy (${state.cursorCost})`;
-  document.getElementById('buy-grandma-btn').textContent = `Buy (${state.grandmaCost})`;
-  renderUpgradeList();
-}
-
-/* -------------------------
-   Click & store actions
-   ------------------------- */
-let scale = 1;
-let shrinking = false;
-clickCircle.addEventListener('click', () => {
-  state.clicks += 1;
+/* --- CLICK HANDLER --- */
+let scale = 1, shrinking = false;
+clickCircle.addEventListener("click", () => {
+  state.clicks++;
   updateDisplay();
   scale = 1.1;
   shrinking = true;
 });
 
-/* buy store item by key */
-function buyStoreItem(key){
-  if (key === 'cursor') buyCursor();
-  else if (key === 'grandma') buyGrandma();
-}
-
-function buyCursor(){
-  if (state.clicks >= state.cursorCost){
+/* --- BUY LOGIC --- */
+function buyCursor() {
+  if (state.clicks >= state.cursorCost) {
     state.clicks -= state.cursorCost;
-    state.cursors += 1;
-    // price formula: floor(base * 1.15 ^ M) where M is number currently owned (we use new cursors for next price)
+    state.cursors++;
     state.cursorCost = Math.floor(15 * Math.pow(1.15, state.cursors));
-    addOrbitingCursor(); // visual
+    addOrbitingCursor();
     updateDisplay();
   }
 }
 
-function buyGrandma(){
-  if (state.clicks >= state.grandmaCost){
+function buyGrandma() {
+  if (state.clicks >= state.grandmaCost) {
     state.clicks -= state.grandmaCost;
-    state.grandmas += 1;
-    // scaling price (simple growth)
+    state.grandmas++;
     state.grandmaCost = Math.floor(100 * Math.pow(1.15, state.grandmas));
     updateDisplay();
   }
 }
 
-/* -------------------------
-   Orbiting cursors visuals
-   - create <img> elements and place each by ring logic
-   ------------------------- */
-function addOrbitingCursor(){
-  const img = document.createElement('img');
-  img.className = 'cursor';
-  img.draggable = false;
-  // re-use preloaded cursor icon (store image src is safe)
-  img.src = storeCursorImgEl.src || fallbackCursorSVG;
-  img.onerror = ()=>{ img.src = fallbackCursorSVG; };
-  cursorContainer.appendChild(img);
-}
-
-/* calculate position per frame:
-   - group cursors in rings of up to 50
-   - in each ring compute countInRing and spread them evenly
-   - radius for ring = base + layer * 40
-*/
-function positionCursors(angleOffset){
-  const nodes = Array.from(cursorContainer.children);
-  const total = nodes.length;
-  let index = 0;
-  const baseRadius = 70; // closer to circle
-  const perRing = 50;
-
-  let layer = 0;
-  while (index < total){
-    const remaining = total - index;
-    const countInRing = Math.min(perRing, remaining);
-    for (let i=0;i<countInRing;i++){
-      const node = nodes[index + i];
-      // when there are fewer than perRing in a ring, they still spread evenly
-      const angle = (i / countInRing) * Math.PI * 2 + angleOffset + layer*0.03;
-      const radius = baseRadius + (layer * 42);
-      const x = Math.cos(angle) * radius;
-      const y = Math.sin(angle) * radius;
-      node.style.left = (x - 16) + 'px';
-      node.style.top  = (y - 16) + 'px';
-      // rotate to face toward the center
-      const rotationDeg = (angle * 180 / Math.PI) - 90; // -90 to face center
-      node.style.transform = `rotate(${rotationDeg}deg)`;
-    }
-    index += countInRing;
-    layer++;
+function buyFarm() {
+  if (state.clicks >= state.farmCost) {
+    state.clicks -= state.farmCost;
+    state.farms++;
+    state.farmCost = Math.floor(1100 * Math.pow(1.15, state.farms));
+    updateDisplay();
   }
 }
 
-/* -------------------------
-   Upgrades UI & logic
-   - Clicking an upgrade opens popup (always openable)
-   - Buy button acts only when conditions met; after buying, upgrade is marked
-   - images are safe via safeIcon property
-   ------------------------- */
-function renderUpgradeList(){
-  // build list
-  upgradeListEl.innerHTML = '';
-  state.upgrades.forEach((u, idx) => {
-    // check unlock
-    let unlocked = false;
-    if (u.reqType === 'cursor') unlocked = state.cursors >= u.reqCount;
-    if (u.reqType === 'grandma') unlocked = state.grandmas >= u.reqCount;
-    if (!unlocked) return; // not shown yet
-
-    // skip bought or still show with bought flag? show if not bought
-    if (u.bought) return;
-
-    const row = document.createElement('div');
-    row.className = 'upgrade-row';
-    const left = document.createElement('div');
-    left.style.display = 'flex';
-    left.style.alignItems = 'center';
-    left.style.gap = '8px';
-    const img = document.createElement('img');
-    img.className = 'smallimg';
-    img.src = u.safeIcon || u.icon; // safeIcon gets set by preload
-    img.onerror = ()=>{ img.src = fallbackCursorSVG; };
-    left.appendChild(img);
-    const text = document.createElement('div');
-    text.innerHTML = `<div style="font-weight:600">${u.name}</div><div style="font-size:12px">${u.desc}</div>`;
-    left.appendChild(text);
-    row.appendChild(left);
-
-    const right = document.createElement('div');
-    right.style.textAlign = 'right';
-    right.innerHTML = `<div>Cost: ${u.cost}</div><div style="font-size:12px">Req: ${u.reqCount} ${u.reqType}</div>`;
-    row.appendChild(right);
-
-    row.addEventListener('click', ()=> openUpgradePopup(idx));
-    upgradeListEl.appendChild(row);
-  });
+/* --- CPS CALC --- */
+function getCPS() {
+  return (
+    state.cursors * state.baseCursorCPS +
+    state.grandmas * state.baseGrandmaCPS +
+    state.farms * state.baseFarmCPS
+  );
 }
 
-/* popup open / close */
-let currentPopupIndex = null;
-function openUpgradePopup(index){
-  currentPopupIndex = index;
-  const u = state.upgrades[index];
-  popupTitle.textContent = u.name;
-  popupDesc.textContent = u.desc;
-  popupCost.textContent = u.cost;
-  popupEffect.textContent = ''; // we show effect inline
-  popupIcon.src = u.safeIcon || u.icon;
-  popupIcon.onerror = ()=>{ popupIcon.src = (u.icon && u.icon.includes('cursor')) ? fallbackCursorSVG : fallbackGrandmaSVG; };
-
-  // Buy button handler: always set, but check affordability & bought state inside handler
-  popupBuyBtn.onclick = () => {
-    const u2 = state.upgrades[index];
-    const unlocked = (u2.reqType === 'cursor') ? (state.cursors >= u2.reqCount) : (state.grandmas >= u2.reqCount);
-    if (u2.bought){
-      // already bought: show a quick message (do not block re-opening)
-      alert('Upgrade already purchased.');
-      return;
-    }
-    if (!unlocked){
-      alert('Upgrade not unlocked yet.');
-      return;
-    }
-    if (state.clicks < u2.cost){
-      alert('Not enough clicks.');
-      return;
-    }
-    // buy
-    state.clicks -= u2.cost;
-    u2.bought = true;
-    // apply effect
-    if (u2.id === 'thousand'){
-      u2.apply();
-      // thousand fingers effect is dynamic because it depends on non-cursor items count
-      // handled in getCPS() by checking u.bought
-    } else {
-      u2.apply();
-    }
-    closePopup();
-    updateDisplay();
-  };
-
-  popupBg.style.display = 'flex';
+/* --- DISPLAY UPDATE --- */
+function updateDisplay() {
+  clickCountEl.textContent = `Clicks: ${Math.floor(state.clicks)}`;
+  cpsEl.textContent = `CPS: ${getCPS().toFixed(2)}`;
+  document.getElementById("cursor-count").textContent = state.cursors;
+  document.getElementById("grandma-count").textContent = state.grandmas;
+  document.getElementById("farm-count").textContent = state.farms;
+  document.getElementById("buy-cursor-btn").textContent = `Buy (${state.cursorCost})`;
+  document.getElementById("buy-grandma-btn").textContent = `Buy (${state.grandmaCost})`;
+  document.getElementById("buy-farm-btn").textContent = `Buy (${state.farmCost})`;
 }
 
-function closePopup(){
-  popupBg.style.display = 'none';
-  currentPopupIndex = null;
-}
-
-/* -------------------------
-   Tick CPS in 0.1s increments
-   ------------------------- */
-setInterval(()=>{
-  const cps = getCPS();
-  state.clicks += cps / 10;
+/* --- CPS TICK --- */
+setInterval(() => {
+  state.clicks += getCPS() / 10;
   updateDisplay();
 }, 100);
 
-/* -------------------------
-   Animation loop for circle and cursors
-   ------------------------- */
+/* --- ANIMATION LOOP --- */
 let angleOffset = 0;
-function animate(){
-  // circle shrink logic
-  if (shrinking){
+function animate() {
+  if (shrinking) {
     scale -= 0.02;
-    if (scale <= 1){ scale = 1; shrinking = false; }
+    if (scale <= 1) { scale = 1; shrinking = false; }
   }
-  document.getElementById('click-circle').style.transform = `translate(-50%,-50%) scale(${scale})`;
-
-  // rotate cursors
+  clickCircle.style.transform = `translate(-50%, -50%) scale(${scale})`;
   angleOffset += 0.03;
   positionCursors(angleOffset);
-
   requestAnimationFrame(animate);
 }
 animate();
 
-/* -------------------------
-   Handle UI buttons for info tabs
-   ------------------------- */
-document.getElementById('btn-updates').addEventListener('click', ()=> {
-  infoDisplay.innerHTML = `<h3>Patch Notes — v1.1.0</h3>
-  <ul>
-    <li>Added Upgrades</li>
-    <li>Added Store (Cursor & Grandma)</li>
-    <li>Added Patch Notes and Settings</li>
-    <li>Overhauled layout & gameplay (mobile friendly)</li>
-    <li>Orbiting cursors now form rings: new ring every 50 cursors</li>
-  </ul>`;
-});
-document.getElementById('btn-settings').addEventListener('click', ()=> {
-  infoDisplay.innerHTML = `<h3>Settings</h3><p>No settings yet — coming soon.</p>`;
-});
+/* --- BUTTON BINDS --- */
+document.getElementById("buy-cursor-btn").addEventListener("click", (e)=>{e.stopPropagation();buyCursor();});
+document.getElementById("buy-grandma-btn").addEventListener("click", (e)=>{e.stopPropagation();buyGrandma();});
+document.getElementById("buy-farm-btn").addEventListener("click", (e)=>{e.stopPropagation();buyFarm();});
 
-/* -------------------------
-   Startup defaults & UI wiring
-   ------------------------- */
 updateDisplay();
-
-/* Connect buy buttons (also clicking row triggers buy) */
-document.getElementById('buy-cursor-btn').addEventListener('click', (e)=>{ e.stopPropagation(); buyCursor(); });
-document.getElementById('buy-grandma-btn').addEventListener('click', (e)=>{ e.stopPropagation(); buyGrandma(); });
-
-/* ensure store cursor icon and orbiting use same src if preload done later */
-storeCursorImgEl.addEventListener('error', ()=>{ storeCursorImgEl.src = fallbackCursorSVG; });
-storeGrandmaImgEl.addEventListener('error', ()=>{ storeGrandmaImgEl.src = fallbackGrandmaSVG; });
-
-/* expose buyStoreItem on row click for touch devices */
-document.getElementById('store-cursor').addEventListener('click', (e)=>{ e.stopPropagation(); buyCursor(); });
-document.getElementById('store-grandma').addEventListener('click', (e)=>{ e.stopPropagation(); buyGrandma(); });
-
-/* make sure upgrade list re-renders when counts change (we already call updateDisplay) */
 </script>
 </body>
 </html>
