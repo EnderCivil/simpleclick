@@ -160,11 +160,12 @@ clickCircle.addEventListener("click",()=>{
 
   updateDisplay();
 
-  // Click animation
-  clickCircle.style.transform = "translate(-50%, -50%) scale(1.1)";
-  setTimeout(() => clickCircle.style.transform = "translate(-50%, -50%) scale(1)", 80);
-});
+// --- Circle click ---
+clickCircle.addEventListener("click", () => {
+  const gain = state.baseClickPower * state.multiplier_click;
+  state.clicks += gain;
 
+  updateDisplay();
 
   // Click animation
   clickCircle.style.transform = "translate(-50%, -50%) scale(1.1)";
