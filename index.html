@@ -3,49 +3,50 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Circle Clicker — Revamp</title>
+<title>Circle Clicker — fixed</title>
 <style>
-  :root{--bg:#f2f2f2;--card:#fff;--muted:#ddd}
-  body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#111;min-height:100vh;display:flex;gap:10px}
-  .column{flex:1;padding:12px;box-sizing:border-box}
-  @media (max-width:900px){body{flex-direction:column}}
-  #game-column{display:flex;flex-direction:column;align-items:center}
-  #game-inner{margin-top:80px;width:100%;display:flex;flex-direction:column;align-items:center}
-  #clicks{font-size:18px;margin:6px 0}
-  #cps{font-size:14px;margin:3px 0;color:#333}
-  #game-container{position:relative;width:360px;height:360px;background:transparent}
-  #click-circle{position:absolute;top:50%;left:50%;width:120px;height:120px;border-radius:50%;background:black;transform:translate(-50%,-50%) scale(1);cursor:pointer;transition:transform 0.06s linear}
-  #cursor-container{position:absolute;top:50%;left:50%;width:0;height:0;transform:translate(-50%,-50%)}
-  .cursor{position:absolute;width:32px;height:32px;transform-origin:center center;pointer-events:none}
-  #middle-buttons{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
-  #info-display{background:var(--card);padding:10px;border-radius:8px;min-height:200px;max-height:60vh;overflow:auto}
-  button{background:var(--card);border:1px solid #aaa;padding:7px 10px;border-radius:6px;cursor:pointer}
-  .panel{background:var(--card);padding:10px;border-radius:8px}
-  .store-row,.upgrade-row{display:flex;align-items:center;justify-content:space-between;padding:6px;border-radius:6px;margin:6px 0;background:var(--muted)}
-  .store-left{display:flex;align-items:center;gap:8px}
-  .smallimg{width:38px;height:38px;object-fit:contain}
-  .count{min-width:36px;text-align:center}
-  #popup-bg{display:none;position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;z-index:999}
-  #popup{background:white;color:#111;padding:16px;border-radius:10px;max-width:92%;width:320px}
-  #popup img{width:48px;height:48px;display:block;margin:0 auto 8px}
-  .locked{opacity:0.5;pointer-events:none}
+:root{--bg:#f2f2f2;--card:#fff;--muted:#ddd}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#111;min-height:100vh;display:flex;gap:10px}
+.column{flex:1;padding:12px;box-sizing:border-box}
+@media (max-width:900px){body{flex-direction:column}}
+#game-column{display:flex;flex-direction:column;align-items:center}
+#game-inner{margin-top:80px;width:100%;display:flex;flex-direction:column;align-items:center}
+#clicks{font-size:18px;margin:6px 0}
+#cps{font-size:14px;margin:3px 0;color:#333}
+#game-container{position:relative;width:360px;height:360px;background:transparent}
+#click-circle{position:absolute;top:50%;left:50%;width:120px;height:120px;border-radius:50%;background:black;transform:translate(-50%,-50%) scale(1);cursor:pointer;transition:transform 0.08s ease-out}
+#cursor-container{position:absolute;top:50%;left:50%;width:0;height:0;transform:translate(-50%,-50%)}
+.cursor{position:absolute;width:32px;height:32px;transform-origin:center center;pointer-events:none}
+#middle-buttons{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+#info-display{background:var(--card);padding:10px;border-radius:8px;min-height:200px;max-height:60vh;overflow:auto}
+button{background:var(--card);border:1px solid #aaa;padding:7px 10px;border-radius:6px;cursor:pointer}
+.panel{background:var(--card);padding:10px;border-radius:8px}
+.store-row,.upgrade-row{display:flex;align-items:center;justify-content:space-between;padding:6px;border-radius:6px;margin:6px 0;background:var(--muted)}
+.store-left{display:flex;align-items:center;gap:8px}
+.smallimg{width:38px;height:38px;object-fit:contain}
+.count{min-width:36px;text-align:center}
+#popup-bg{display:none;position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;z-index:999}
+#popup{background:white;color:#111;padding:16px;border-radius:10px;max-width:92%;width:320px}
+#popup img{width:48px;height:48px;display:block;margin:0 auto 8px}
+.locked{opacity:0.5;pointer-events:none}
+.note{font-size:12px;color:#444;margin-top:6px}
 </style>
 </head>
 <body>
 
-<!-- LEFT -->
+<!-- LEFT: Game -->
 <div class="column" id="game-column">
   <div id="game-inner">
     <div id="clicks">Clicks: 0</div>
     <div id="cps">CPS: 0.0</div>
     <div id="game-container">
-      <div id="click-circle"></div>
+      <div id="click-circle" title="Click me"></div>
       <div id="cursor-container"></div>
     </div>
   </div>
 </div>
 
-<!-- MIDDLE -->
+<!-- MIDDLE: Info -->
 <div class="column">
   <div id="middle-buttons">
     <button id="btn-updates">Updates</button>
@@ -54,107 +55,101 @@
   <div id="info-display"></div>
 </div>
 
-<!-- RIGHT -->
+<!-- RIGHT: Store -->
 <div class="column">
-  <div class="panel" id="store-panel">
+  <div class="panel" id="upgrades-panel">
+    <h3>Upgrades</h3>
+    <div id="upgrade-list"></div>
+  </div>
+  <div class="panel" id="store-panel" style="margin-top:12px">
     <h3>Store</h3>
-
-    <!-- Store Items -->
     <div class="store-row" id="store-cursor">
       <div class="store-left">
-        <img class="smallimg" id="store-cursor-img">
-        <div><strong>Cursor</strong><div style="font-size:12px">A simple cursor.</div></div>
+        <img id="store-cursor-img" class="smallimg" alt="cursor icon">
+        <div><strong>Cursor</strong><div style="font-size:12px">A simple cursor for all your simple needs.</div></div>
       </div>
       <div>
-        <button id="buy-cursor-btn">Buy (15)</button>
+        <button id="buy-cursor-btn">Buy</button>
         <div class="count" id="cursor-count">0</div>
       </div>
     </div>
-
     <div class="store-row" id="store-grandma">
       <div class="store-left">
-        <img class="smallimg" id="store-grandma-img">
-        <div><strong>Grandma</strong><div style="font-size:12px">They click for you.</div></div>
+        <img id="store-grandma-img" class="smallimg" alt="grandma icon">
+        <div><strong>Grandma</strong><div style="font-size:12px">Hire these old grandmas to click for you!</div></div>
       </div>
       <div>
-        <button id="buy-grandma-btn">Buy (100)</button>
+        <button id="buy-grandma-btn">Buy</button>
         <div class="count" id="grandma-count">0</div>
-      </div>
-    </div>
-
-    <div class="store-row" id="store-farm">
-      <div class="store-left">
-        <img class="smallimg" id="store-farm-img">
-        <div><strong>Farm</strong><div style="font-size:12px">Grow clicks somehow!</div></div>
-      </div>
-      <div>
-        <button id="buy-farm-btn">Buy (1100)</button>
-        <div class="count" id="farm-count">0</div>
       </div>
     </div>
   </div>
 </div>
 
+<!-- POPUP -->
+<div id="popup-bg" onclick="if(event.target===this) closePopup()">
+  <div id="popup" role="dialog" aria-modal="true">
+    <img id="popup-icon" alt="" />
+    <h3 id="popup-title"></h3>
+    <div id="popup-desc" style="margin:8px 0"></div>
+    <div id="popup-effect" style="font-weight:600;margin-bottom:6px"></div>
+    <div>Cost: <span id="popup-cost"></span> clicks</div>
+    <div style="display:flex;gap:8px;margin-top:10px;justify-content:center">
+      <button id="popup-buy">Buy</button>
+      <button onclick="closePopup()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <script>
-/* --- GAME STATE --- */
-const state = {
+// --- Data ---
+const cursorOrbitImg = "https://upload.wikimedia.org/wikipedia/commons/8/83/Cursor_icon.svg";
+let state = {
   clicks: 0,
   cursors: 0,
   grandmas: 0,
-  farms: 0,
   cursorCost: 15,
   grandmaCost: 100,
-  farmCost: 1100,
   baseCursorCPS: 0.1,
   baseGrandmaCPS: 1,
-  baseFarmCPS: 8
+  multiplier_cursor: 1,
+  multiplier_grandma: 1
 };
 
-/* --- ELEMENTS --- */
-const clickCircle = document.getElementById('click-circle');
-const cursorContainer = document.getElementById('cursor-container');
-const clickCountEl = document.getElementById('clicks');
-const cpsEl = document.getElementById('cps');
+const clickCircle = document.getElementById("click-circle");
+const clickCountEl = document.getElementById("clicks");
+const cpsEl = document.getElementById("cps");
+const cursorContainer = document.getElementById("cursor-container");
+const storeCursorImgEl = document.getElementById("store-cursor-img");
+const storeGrandmaImgEl = document.getElementById("store-grandma-img");
+storeCursorImgEl.src = cursorOrbitImg;
+storeGrandmaImgEl.src = "https://upload.wikimedia.org/wikipedia/commons/d/d8/Emoji_u1f475.svg";
 
-/* --- STORE IMAGES --- */
-document.getElementById("store-cursor-img").src = "https://static.wikia.nocookie.net/cookieclicker/images/d/d2/Plain_cursor.png";
-document.getElementById("store-grandma-img").src = "https://static.wikia.nocookie.net/cookieclicker/images/a/a0/GrandmaIconTransparent.png";
-document.getElementById("store-farm-img").src = "https://static.wikia.nocookie.net/cookieclicker/images/a/a7/Farm.png;
-
-/* --- ADD CURSOR ORBIT --- */
-function addOrbitingCursor() {
-  const img = document.createElement("img");
-  img.className = "cursor";
-  img.src = document.getElementById("store-cursor-img").src;
-  cursorContainer.appendChild(img);
+// --- Display ---
+function getCPS() {
+  return (state.cursors * state.baseCursorCPS * state.multiplier_cursor) +
+         (state.grandmas * state.baseGrandmaCPS * state.multiplier_grandma);
+}
+function updateDisplay() {
+  clickCountEl.textContent = "Clicks: " + Math.floor(state.clicks);
+  cpsEl.textContent = "CPS: " + getCPS().toFixed(2);
+  document.getElementById("cursor-count").textContent = state.cursors;
+  document.getElementById("grandma-count").textContent = state.grandmas;
+  document.getElementById("buy-cursor-btn").textContent = `Buy (${state.cursorCost})`;
+  document.getElementById("buy-grandma-btn").textContent = `Buy (${state.grandmaCost})`;
 }
 
-/* --- POSITION CURSORS --- */
-function positionCursors(angleOffset) {
-  const cursors = Array.from(cursorContainer.children);
-  const radius = 70; // closer to the circle
-  const count = cursors.length;
-  cursors.forEach((cursor, i) => {
-    const angle = (i / count) * Math.PI * 2 + angleOffset;
-    const x = Math.cos(angle) * radius;
-    const y = Math.sin(angle) * radius;
-    cursor.style.left = `${x - 16}px`;
-    cursor.style.top = `${y - 16}px`;
-    const rotationDeg = (angle * 180 / Math.PI) + 90; // ensure it faces the circle
-    cursor.style.transform = `rotate(${rotationDeg}deg)`;
-  });
-}
-
-/* --- CLICK HANDLER --- */
-let scale = 1, shrinking = false;
+// --- Click circle ---
+let scale = 1;
 clickCircle.addEventListener("click", () => {
-  state.clicks++;
+  state.clicks += 1;
   updateDisplay();
   scale = 1.1;
-  shrinking = true;
+  clickCircle.style.transform = "translate(-50%, -50%) scale(1.1)";
+  setTimeout(() => clickCircle.style.transform = "translate(-50%, -50%) scale(1)", 80);
 });
 
-/* --- BUY LOGIC --- */
+// --- Store logic ---
 function buyCursor() {
   if (state.clicks >= state.cursorCost) {
     state.clicks -= state.cursorCost;
@@ -164,7 +159,6 @@ function buyCursor() {
     updateDisplay();
   }
 }
-
 function buyGrandma() {
   if (state.clicks >= state.grandmaCost) {
     state.clicks -= state.grandmaCost;
@@ -173,61 +167,70 @@ function buyGrandma() {
     updateDisplay();
   }
 }
+document.getElementById("buy-cursor-btn").onclick = buyCursor;
+document.getElementById("buy-grandma-btn").onclick = buyGrandma;
 
-function buyFarm() {
-  if (state.clicks >= state.farmCost) {
-    state.clicks -= state.farmCost;
-    state.farms++;
-    state.farmCost = Math.floor(1100 * Math.pow(1.15, state.farms));
-    updateDisplay();
+// --- Cursor visuals ---
+function addOrbitingCursor() {
+  const img = document.createElement("img");
+  img.className = "cursor";
+  img.src = storeCursorImgEl.src;
+  cursorContainer.appendChild(img);
+}
+
+function positionCursors(angleOffset) {
+  const cursors = Array.from(cursorContainer.children);
+  const baseRadius = 60; // closer to circle
+  const perRing = 50;
+  let index = 0, layer = 0;
+  while (index < cursors.length) {
+    const countInRing = Math.min(perRing, cursors.length - index);
+    for (let i = 0; i < countInRing; i++) {
+      const node = cursors[index + i];
+      const angle = (i / countInRing) * Math.PI * 2 + angleOffset + layer * 0.03;
+      const radius = baseRadius + layer * 42;
+      const x = Math.cos(angle) * radius;
+      const y = Math.sin(angle) * radius;
+      node.style.left = (x - 16) + "px";
+      node.style.top = (y - 16) + "px";
+      // rotate to face inward (toward circle)
+      const rotationDeg = (angle * 180 / Math.PI) + 90;
+      node.style.transform = `rotate(${rotationDeg}deg)`;
+    }
+    index += countInRing;
+    layer++;
   }
 }
 
-/* --- CPS CALC --- */
-function getCPS() {
-  return (
-    state.cursors * state.baseCursorCPS +
-    state.grandmas * state.baseGrandmaCPS +
-    state.farms * state.baseFarmCPS
-  );
-}
-
-/* --- DISPLAY UPDATE --- */
-function updateDisplay() {
-  clickCountEl.textContent = `Clicks: ${Math.floor(state.clicks)}`;
-  cpsEl.textContent = `CPS: ${getCPS().toFixed(2)}`;
-  document.getElementById("cursor-count").textContent = state.cursors;
-  document.getElementById("grandma-count").textContent = state.grandmas;
-  document.getElementById("farm-count").textContent = state.farms;
-  document.getElementById("buy-cursor-btn").textContent = `Buy (${state.cursorCost})`;
-  document.getElementById("buy-grandma-btn").textContent = `Buy (${state.grandmaCost})`;
-  document.getElementById("buy-farm-btn").textContent = `Buy (${state.farmCost})`;
-}
-
-/* --- CPS TICK --- */
+// --- Passive CPS ---
 setInterval(() => {
   state.clicks += getCPS() / 10;
   updateDisplay();
 }, 100);
 
-/* --- ANIMATION LOOP --- */
+// --- Animation ---
 let angleOffset = 0;
 function animate() {
-  if (shrinking) {
-    scale -= 0.02;
-    if (scale <= 1) { scale = 1; shrinking = false; }
-  }
-  clickCircle.style.transform = `translate(-50%, -50%) scale(${scale})`;
   angleOffset += 0.03;
   positionCursors(angleOffset);
   requestAnimationFrame(animate);
 }
 animate();
 
-/* --- BUTTON BINDS --- */
-document.getElementById("buy-cursor-btn").addEventListener("click", (e)=>{e.stopPropagation();buyCursor();});
-document.getElementById("buy-grandma-btn").addEventListener("click", (e)=>{e.stopPropagation();buyGrandma();});
-document.getElementById("buy-farm-btn").addEventListener("click", (e)=>{e.stopPropagation();buyFarm();});
+// --- Buttons ---
+document.getElementById("btn-updates").onclick = () => {
+  document.getElementById("info-display").innerHTML = `
+    <h3>Patch Notes — v1.1.1</h3>
+    <ul>
+      <li>Fixed circle scaling bug</li>
+      <li>Cursors now face inward</li>
+      <li>Clicks display fixed (no decimals)</li>
+      <li>Adjusted cursor orbit distance</li>
+    </ul>`;
+};
+document.getElementById("btn-settings").onclick = () => {
+  document.getElementById("info-display").innerHTML = `<h3>Settings</h3><p>Coming soon...</p>`;
+};
 
 updateDisplay();
 </script>
