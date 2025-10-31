@@ -248,20 +248,35 @@ function animate(){
 }
 animate();
 
-// --- Upgrades ---
+// Upgrades
 function updateUpgradeList(){
   upgradeListEl.innerHTML="";
   state.upgrades.forEach(u=>{
-    const ownedCount=state[u.reqType+"s"]||0;
-    if(!u.bought && ownedCount>=u.reqCount){
-      const row=document.createElement("div");
-      row.className="upgrade-row";
-      row.innerHTML=`<div class="store-left"><img src="${u.icon}" class="smallimg"><div><strong>${u.name}</strong><div style="font-size:12px">${u.desc}</div></div></div><button>Buy (${u.cost})</button>`;
-      row.querySelector("button").onclick=()=>showUpgradePopup(u);
+    const ownedCount = state[u.reqType+"s"] || 0;
+    if(!u.bought && ownedCount >= u.reqCount){
+      const row = document.createElement("div");
+      row.className = "upgrade-row";
+      row.innerHTML = `<div class="store-left">
+                          <img src="${u.icon}" class="smallimg">
+                          <div><strong>${u.name}</strong><div style="font-size:12px">${u.desc}</div></div>
+                       </div>
+                       <button>Buy (${u.cost})</button>`;
+      
+      // Direct purchase, no popup
+      row.querySelector("button").onclick = () => {
+        if(state.clicks >= u.cost){
+          state.clicks -= u.cost;
+          u.bought = true;
+          u.apply();
+          updateDisplay();
+        }
+      };
+
       upgradeListEl.appendChild(row);
     }
   });
 }
+
 function showUpgradePopup(u){
   document.getElementById("popup-bg").style.display="flex";
   document.getElementById("popup-icon").src=u.icon;
