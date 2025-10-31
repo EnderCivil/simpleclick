@@ -83,9 +83,25 @@ button{background:var(--card);border:1px solid #aaa;padding:7px 10px;border-radi
         <button id="buy-grandma-btn">Buy</button>
         <div class="count" id="grandma-count">0</div>
       </div>
+    </div?
+    <div class="store-row" id="store-farm">
+      <div class="store-left">
+        <img id="store-farm-img" class="smallimg" src="https://static.wikia.nocookie.net/cookieclicker/images/1/1a/FarmIconTransparent.png" alt="farm icon">
+        <div>
+          <strong>Farm</strong>
+          <div style="font-size:12px">Farms clicks automatically over time.</div>
+        </div>
+      </div>
+      <div>
+        <button id="buy-farm-btn">Buy</button>
+        <div class="count" id="farm-count">0</div>
+      </div>
     </div>
+    -->
+
   </div>
 </div>
+
 
 <!-- POPUP -->
 <div id="popup-bg" onclick="if(event.target===this) closePopup()">
@@ -108,14 +124,18 @@ let state = {
   clicks: 0,
   cursors: 0,
   grandmas: 0,
+  farms: 0,
   cursorCost: 15,
   grandmaCost: 100,
+  farmCost: 1100,
   baseCursorCPS: 0.1,
   baseGrandmaCPS: 1,
+  baseFarmCPS: 8,
   baseClickPower: 1, // 🆕 Base clicks per click
   multiplier_click: 1,
   multiplier_cursor: 1,
   multiplier_grandma: 1,
+  multiplier_farm: 1,
   thousandFingersMultiplier: 0, // upgrades can boost this multiplier
   upgrades: []
 };
@@ -133,6 +153,7 @@ state.upgrades = [
   {id:'g2',name:'Steel-plated rolling pins',desc:'Doubles grandma effectiveness again.',cost:5000,reqType:'grandma',reqCount:5,icon:'https://static.wikia.nocookie.net/cookieclicker/images/d/dc/Berrylium_grandma.png',bought:false,apply:()=>{state.multiplier_grandma*=2}},
   {id:'g3',name:'Lubricated dentures',desc:'Doubles grandma effectiveness once more.',cost:50000,reqType:'grandma',reqCount:25,icon:'https://static.wikia.nocookie.net/cookieclicker/images/2/2a/Blueberrylium_grandma.png',bought:false,apply:()=>{state.multiplier_grandma*=2}}
 ];
+  
 
 // --- Elements ---
 const clickCircle = document.getElementById("click-circle");
@@ -142,15 +163,17 @@ const cursorContainer = document.getElementById("cursor-container");
 const upgradeListEl = document.getElementById("upgrade-list");
 document.getElementById("store-cursor-img").src = cursorOrbitImg;
 document.getElementById("store-grandma-img").src = "https://static.wikia.nocookie.net/cookieclicker/images/a/a0/GrandmaIconTransparent.png";
+document.getElementById("store-farm-img").src = "https://static.wikia.nocookie.net/cookieclicker/images/1/1a/FarmIconTransparent.png";
 
 // --- Display ---
 function getCPS() {
   let cps =
       (state.cursors * state.baseCursorCPS * state.multiplier_cursor) +
-      (state.grandmas * state.baseGrandmaCPS * state.multiplier_grandma);
+      (state.grandmas * state.baseGrandmaCPS * state.multiplier_grandma) +
+      (state.farms * state.baseFarmCPS * state.multiplier_farm);
 
   // Add Thousand Fingers CPS
-  let nonCursorBuildings = state.grandmas; 
+  let nonCursorBuildings = state.grandmas += state.farms; 
   cps += nonCursorBuildings * 0.1 * state.thousandFingersMultiplier;
 
   return cps;
@@ -161,6 +184,7 @@ function updateDisplay(){
   cpsEl.textContent = "CPS: " + getCPS().toFixed(2);
   document.getElementById("cursor-count").textContent = state.cursors;
   document.getElementById("grandma-count").textContent = state.grandmas;
+  document.getElemenyById("farm-count").textContent = state.farms;
   document.getElementById("buy-cursor-btn").textContent = `Buy (${state.cursorCost})`;
   document.getElementById("buy-grandma-btn").textContent = `Buy (${state.grandmaCost})`;
   updateUpgradeList();
@@ -171,7 +195,7 @@ clickCircle.addEventListener("click", () => {
   let gain = state.baseClickPower * state.multiplier_click;
 
   // Thousand Fingers effect: every non-cursor building contributes
-  let nonCursorBuildings = state.grandmas; // include more types if you have them
+  let nonCursorBuildings = state.grandmas += state.farms; // include more types if you have them
   gain += nonCursorBuildings * 0.1 * state.thousandFingersMultiplier; // 0.1 per building
 
   state.clicks += gain;
@@ -202,8 +226,17 @@ function buyGrandma(){
     updateDisplay();
   }
 }
+function buyFarm(){
+  if(state.clicks>=state.farmCost){
+    state.clicks-=state.farmCost;
+    state.farms++;
+    state.farmCost=Math.floor(100*Math.pow(1.15,state.farms));
+    updateDisplay();
+  }
+}
 document.getElementById("buy-cursor-btn").onclick=buyCursor;
 document.getElementById("buy-grandma-btn").onclick=buyGrandma;
+document.getElementById("buy-farm-btn").onclick=buyFarm;
 
 // --- Cursors orbit ---
 function addOrbitingCursor(){
