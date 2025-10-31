@@ -320,7 +320,7 @@
       const y = Math.sin(angle) * radius;
       cursor.style.left = `${x - 16}px`;
       cursor.style.top = `${y - 16}px`;
-      const rotationDeg = (angle * 180 / Math.PI) + 90;
+      const rotationDeg = (angle * 180 / Math.PI) - 90;
       cursor.style.transform = `rotate(${rotationDeg}deg)`;
     });
     requestAnimationFrame(animate);
