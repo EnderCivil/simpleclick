@@ -158,7 +158,7 @@ let state = {
 /* Upgrades list (cursor + grandmas). "type" used for display */
 state.upgrades = [
   { id: 'rif', name: 'Reinforced Index Finger', desc: 'Doubles cursor output.', cost: 100, reqType: 'cursor', reqCount: 1, icon: 'https://static.wikia.nocookie.net/cookieclicker/images/d/d2/Plain_cursor.png', bought:false, apply:()=>{ state.multiplier_cursor *= 2 } },
-  { id: 'cream', name: 'Carpal Tunnel Prevention Cream', desc: 'Doubles cursor effectiveness again.', cost: 500, reqType: 'cursor', reqCount: 1, icon: 'https://static.wikia.nocookie.net/cookieclicker/images/0/01/Berrylium_cursor.png/revision/latest?cb=20160213150246', bought:false, apply:()=>{ state.multiplier_cursor *= 2 } }, // icon intentionally set different to avoid reuse issues; fallback applied if fails
+  { id: 'cream', name: 'Carpal Tunnel Prevention Cream', desc: 'Doubles cursor effectiveness again.', cost: 500, reqType: 'cursor', reqCount: 1, icon: 'https://static.wikia.nocookie.net/cookieclicker/images/0/01/Berrylium_cursor.png', bought:false, apply:()=>{ state.multiplier_cursor *= 2 } }, // icon intentionally set different to avoid reuse issues; fallback applied if fails
   { id: 'ambi', name: 'Ambidextrous', desc: 'Doubles cursor effectiveness again.', cost: 10000, reqType: 'cursor', reqCount: 10, icon: 'https://static.wikia.nocookie.net/cookieclicker/images/2/2a/Blueberrylium_grandma.png', bought:false, apply:()=>{ state.multiplier_cursor *= 2 } },
 
   // Grandma upgrades
