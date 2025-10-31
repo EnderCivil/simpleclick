@@ -115,6 +115,7 @@ let state = {
   multiplier_click: 1,
   multiplier_cursor: 1,
   multiplier_grandma: 1,
+  state.thousandFingersMultiplier = 0; // upgrades can boost this multiplier
   upgrades: []
 };
 
@@ -124,6 +125,9 @@ state.upgrades = [
   {id:'rif',name:'Reinforced Index Finger',desc:'Doubles cursor effectiveness.',cost:100,reqType:'cursor',reqCount:1,icon:'https://static.wikia.nocookie.net/cookieclicker/images/d/d2/Plain_cursor.png',bought:false,apply:()=>{state.multiplier_cursor*=2; state.multiplier_click *= 2;}},
   {id:'cream',name:'Carpal Tunnel Prevention Cream',desc:'Doubles cursor effectiveness again.',cost:500,reqType:'cursor',reqCount:1,icon:'https://static.wikia.nocookie.net/cookieclicker/images/0/01/Berrylium_cursor.png',bought:false,apply:()=>{state.multiplier_cursor*=2; state.multiplier_click *= 2;}},
   {id:'ambi',name:'Ambidextrous',desc:'Doubles cursor effectiveness once more.',cost:10000,reqType:'cursor',reqCount:10,icon:'https://static.wikia.nocookie.net/cookieclicker/images/2/2e/Blueberrylium_cursor.png',bought:false,apply:()=>{state.multiplier_cursor*=2; state.multiplier_click *= 2;}},
+  {id:'tf', name:'Thousand Fingers', desc:'Each non-cursor building adds +0.1 to click power and CPS.', cost:100000, reqType:'cursor', reqCount:25, icon:'https://static.wikia.nocookie.net/cookieclicker/images/a/a9/Chalcedhoney_cursor.png', bought:false, apply:()=>{ state.thousandFingersMultiplier *= 1;}},
+  {id:'tf2', name:'Million Fingers', desc:'Multiplies the gain from Thousand fingers by 5.', cost:10000000, reqType:'cursor', reqCount:50, icon:'https://static.wikia.nocookie.net/cookieclicker/images/0/0c/Buttergold_cursor.png', bought:false, apply:()=>{ state.thousandFingersMultiplier *= 5;}},
+  {id:'tf3', name:'Billion Fingers', desc:'Multiplies the gain from Thousand fingers by 10.', cost:100000000, reqType:'cursor', reqCount:100, icon:'https://static.wikia.nocookie.net/cookieclicker/images/f/f2/Sugarmuck_cursor.png', bought:false, apply:()=>{ state.thousandFingersMultiplier *= 10;}},
   {id:'g1',name:'Forwards from grandma',desc:'Doubles grandma effectiveness.',cost:1000,reqType:'grandma',reqCount:1,icon:'https://static.wikia.nocookie.net/cookieclicker/images/0/00/Plain_grandma.png',bought:false,apply:()=>{state.multiplier_grandma*=2}},
   {id:'g2',name:'Steel-plated rolling pins',desc:'Doubles grandma effectiveness again.',cost:5000,reqType:'grandma',reqCount:5,icon:'https://static.wikia.nocookie.net/cookieclicker/images/d/dc/Berrylium_grandma.png',bought:false,apply:()=>{state.multiplier_grandma*=2}},
   {id:'g3',name:'Lubricated dentures',desc:'Doubles grandma effectiveness once more.',cost:50000,reqType:'grandma',reqCount:25,icon:'https://static.wikia.nocookie.net/cookieclicker/images/2/2a/Blueberrylium_grandma.png',bought:false,apply:()=>{state.multiplier_grandma*=2}}
@@ -139,10 +143,18 @@ document.getElementById("store-cursor-img").src = cursorOrbitImg;
 document.getElementById("store-grandma-img").src = "https://static.wikia.nocookie.net/cookieclicker/images/a/a0/GrandmaIconTransparent.png";
 
 // --- Display ---
-function getCPS(){
-  return (state.cursors * state.baseCursorCPS * state.multiplier_cursor) +
-         (state.grandmas * state.baseGrandmaCPS * state.multiplier_grandma);
+function getCPS() {
+  let cps =
+      (state.cursors * state.baseCursorCPS * state.multiplier_cursor) +
+      (state.grandmas * state.baseGrandmaCPS * state.multiplier_grandma);
+
+  // Add Thousand Fingers CPS
+  let nonCursorBuildings = state.grandmas; 
+  cps += nonCursorBuildings * 0.1 * state.thousandFingersMultiplier;
+
+  return cps;
 }
+
 function updateDisplay(){
   clickCountEl.textContent = "Clicks: " + Math.floor(state.clicks);
   cpsEl.textContent = "CPS: " + getCPS().toFixed(2);
@@ -153,17 +165,22 @@ function updateDisplay(){
   updateUpgradeList();
 }
 
-// --- Circle click ---
 clickCircle.addEventListener("click", () => {
-  const gain = state.baseClickPower * state.multiplier_click;
-  state.clicks += gain;
+  // Base gain from cursor
+  let gain = state.baseClickPower * state.multiplier_click;
 
+  // Thousand Fingers effect: every non-cursor building contributes
+  let nonCursorBuildings = state.grandmas; // include more types if you have them
+  gain += nonCursorBuildings * 0.1 * state.thousandFingersMultiplier; // 0.1 per building
+
+  state.clicks += gain;
   updateDisplay();
 
   // Click animation
   clickCircle.style.transform = "translate(-50%, -50%) scale(1.1)";
   setTimeout(() => clickCircle.style.transform = "translate(-50%, -50%) scale(1)", 80);
 });
+
 
 
 // --- Store logic ---
