@@ -1,161 +1,344 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Circle Clicker</title>
-  <style>
-    body {
-      background: #f2f2f2;
-      text-align: center;
-      font-family: Arial, sans-serif;
-      margin-top: 40px;
+<meta charset="UTF-8">
+<title>Circle Clicker v1.1.0</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body {
+    background:#f2f2f2;
+    font-family: Arial, sans-serif;
+    margin:0;
+    padding:0;
+    text-align:center;
+  }
+  #main {
+    display:flex;
+    flex-direction:row;
+    justify-content:space-between;
+    gap:10px;
+    padding:10px;
+  }
+  .column {
+    flex:1;
+    background:#fff;
+    border-radius:8px;
+    padding:10px;
+    box-shadow:0 0 5px rgba(0,0,0,0.1);
+  }
+  /* Left column (game area) */
+  #game-container {
+    position:relative;
+    width:100%;
+    height:400px;
+  }
+  #click-circle {
+    position:absolute;
+    top:50%;
+    left:50%;
+    width:120px;
+    height:120px;
+    background:black;
+    border-radius:50%;
+    transform:translate(-50%,-50%) scale(1);
+    cursor:pointer;
+    transition:transform 0.05s linear;
+  }
+  #cursor-container {
+    position:absolute;
+    top:50%;
+    left:50%;
+    width:0;
+    height:0;
+    transform:translate(-50%,-50%);
+  }
+  .cursor {
+    position:absolute;
+    width:32px;
+    height:32px;
+    transform-origin:center center;
+  }
+  h1,h2,h3 {
+    margin:5px 0;
+  }
+  button {
+    cursor:pointer;
+    padding:6px 10px;
+    font-size:14px;
+    margin:2px;
+  }
+  /* Middle column (info) */
+  #info-buttons {
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  #info-display {
+    background:#fafafa;
+    border:1px solid #ccc;
+    padding:10px;
+    min-height:150px;
+    text-align:left;
+    overflow-y:auto;
+  }
+  /* Right column (store/upgrades) */
+  #upgrades {
+    display:flex;
+    flex-wrap:wrap;
+    gap:5px;
+    justify-content:center;
+  }
+  .upgrade {
+    width:64px;
+    height:64px;
+    background:#ddd;
+    border-radius:6px;
+    cursor:pointer;
+    position:relative;
+  }
+  .upgrade img {
+    width:64px;
+    height:64px;
+    border-radius:6px;
+  }
+  .upgrade.locked {
+    filter:grayscale(100%);
+    opacity:0.5;
+    cursor:default;
+  }
+  #store-item {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:#eee;
+    padding:5px;
+    margin-top:10px;
+    border-radius:6px;
+  }
+  /* Responsive layout */
+  @media (max-width:800px){
+    #main {
+      flex-direction:column;
     }
-
-    #game-container {
-      position: relative;
-      width: 400px;
-      height: 400px;
-      margin: 0 auto;
-    }
-
-    #click-circle {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 120px;
-      height: 120px;
-      background: black;
-      border-radius: 50%;
-      transform: translate(-50%, -50%) scale(1);
-      cursor: pointer;
-      transition: transform 0.05s linear;
-    }
-
-    #cursor-container {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 0;
-      height: 0;
-      transform: translate(-50%, -50%);
-    }
-
-    .cursor {
-      position: absolute;
-      width: 32px;
-      height: 32px;
-      transform-origin: center center;
-    }
-
-    #ui {
-      margin-top: 20px;
-    }
-
-    button {
-      padding: 8px 15px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-  </style>
+  }
+</style>
 </head>
 <body>
-  <div id="game-container">
-    <div id="click-circle"></div>
-    <div id="cursor-container"></div>
+
+<div id="main">
+  <!-- Left: Game -->
+  <div class="column" id="left-col">
+    <h2>Clicks: <span id="click-count">0</span></h2>
+    <p>CPS: <span id="cps">0.0</span></p>
+    <div id="game-container">
+      <div id="click-circle"></div>
+      <div id="cursor-container"></div>
+    </div>
   </div>
 
-  <div id="ui">
-    <h1>Circle Clicker</h1>
-    <p>Clicks: <span id="click-count">0</span></p>
-    <button id="buy-cursor">Buy Cursor (Cost: 15)</button>
+  <!-- Middle: Info -->
+  <div class="column" id="middle-col">
+    <div id="info-buttons">
+      <button id="btn-updates">Updates</button>
+      <button id="btn-settings">Settings</button>
+    </div>
+    <div id="info-display"></div>
   </div>
 
-  <script>
-    const clickCircle = document.getElementById("click-circle");
-    const clickCountEl = document.getElementById("click-count");
-    const buyCursorBtn = document.getElementById("buy-cursor");
-    const cursorContainer = document.getElementById("cursor-container");
+  <!-- Right: Store -->
+  <div class="column" id="right-col">
+    <h3>Upgrades</h3>
+    <div id="upgrades"></div>
 
-    const cursorImage = "https://images.vexels.com/media/users/3/131773/isolated/svg/790c78d39fd853ae72167411aa11d727.svg";
+    <h3>Store</h3>
+    <div id="store-item">
+      <div>
+        <strong>Cursor</strong><br>
+        <small>+0.1 CPS</small>
+      </div>
+      <div>
+        <button id="buy-cursor">Buy (Cost: 15)</button>
+        <span id="cursor-count">0</span>
+      </div>
+    </div>
+  </div>
+</div>
 
-    let clicks = 0;
-    let cursors = 0;
-    let cursorCost = 15;
-    let scale = 1;
-    let targetScale = 1;
-    let cursorAngle = 0;
-    let shrinking = false;
+<script>
+  const clickCircle=document.getElementById("click-circle");
+  const clickCountEl=document.getElementById("click-count");
+  const cpsEl=document.getElementById("cps");
+  const cursorContainer=document.getElementById("cursor-container");
+  const buyCursorBtn=document.getElementById("buy-cursor");
+  const cursorCountEl=document.getElementById("cursor-count");
+  const infoDisplay=document.getElementById("info-display");
 
-    // Click to earn
-    clickCircle.addEventListener("click", () => {
-      clicks++;
-      clickCountEl.textContent = Math.floor(clicks);
-      scale = 1.1;
-      shrinking = true;
-    });
+  const cursorImage="https://images.vexels.com/media/users/3/131773/isolated/svg/790c78d39fd853ae72167411aa11d727.svg";
 
-    // Buy cursor
-    buyCursorBtn.addEventListener("click", () => {
-      if (clicks >= cursorCost) {
-        clicks -= cursorCost;
-        cursors++;
-        clickCountEl.textContent = Math.floor(clicks);
-        cursorCost = Math.floor(15 * Math.pow(1.15, cursors));
-        buyCursorBtn.textContent = `Buy Cursor (Cost: ${cursorCost})`;
-        addCursor();
-      }
-    });
+  let clicks=0;
+  let cursors=0;
+  let cursorCost=15;
+  let scale=1;
+  let shrinking=false;
+  let cursorAngle=0;
+  let cps=0;
+  let cursorPower=0.1;
 
-    // Add a cursor
-    function addCursor() {
-      const img = document.createElement("img");
-      img.src = cursorImage;
-      img.className = "cursor";
-      cursorContainer.appendChild(img);
+  // Upgrades definition
+  const upgrades=[
+    {
+      id:"rif",
+      name:"Reinforced Index Finger",
+      cost:100,
+      reqCursors:1,
+      icon:"https://static.wikia.nocookie.net/cookieclicker/images/d/d2/Plain_cursor.png/revision/latest?cb=20160213145400",
+      multiplier:2,
+      purchased:false
+    },
+    {
+      id:"cream",
+      name:"Carpal Tunnel Prevention Cream",
+      cost:500,
+      reqCursors:1,
+      icon:"https://static.wikia.nocookie.net/cookieclicker/images/0/01/Berrylium_cursor.png/revision/latest?cb=20160213150246",
+      multiplier:2,
+      purchased:false
+    },
+    {
+      id:"ambi",
+      name:"Ambidextrous",
+      cost:10000,
+      reqCursors:10,
+      icon:"https://static.wikia.nocookie.net/cookieclicker/images/2/2e/Blueberrylium_cursor.png/revision/latest?cb=20160213145436",
+      multiplier:2,
+      purchased:false
     }
+  ];
 
-    // Animation loop
-    function animate() {
-      // Shrink effect
-      if (shrinking) {
-        scale -= 0.01;
-        if (scale <= 1) {
-          scale = 1;
-          shrinking = false;
+  const upgradesContainer=document.getElementById("upgrades");
+
+  function renderUpgrades(){
+    upgradesContainer.innerHTML="";
+    upgrades.forEach(up=>{
+      const div=document.createElement("div");
+      div.className="upgrade "+(up.purchased?"locked":"");
+      if(!up.purchased && cursors>=up.reqCursors && clicks>=up.cost){
+        div.classList.remove("locked");
+      } else if(up.purchased || cursors<up.reqCursors){
+        div.classList.add("locked");
+      }
+      const img=document.createElement("img");
+      img.src=up.icon;
+      div.appendChild(img);
+      div.title=`${up.name}\nCost: ${up.cost} clicks`;
+      div.addEventListener("click",()=>{
+        if(!up.purchased && clicks>=up.cost && cursors>=up.reqCursors){
+          clicks-=up.cost;
+          up.purchased=true;
+          cursorPower*=up.multiplier;
+          updateCPS();
+          clickCountEl.textContent=Math.floor(clicks);
+          renderUpgrades();
         }
-      }
-      clickCircle.style.transform = `translate(-50%, -50%) scale(${scale})`;
-
-      // Cursor rotation
-      const cursorEls = document.querySelectorAll(".cursor");
-      const total = cursorEls.length;
-      cursorAngle += 0.01;
-
-      cursorEls.forEach((cursor, i) => {
-        const layer = Math.floor(i / 50);
-        const angle = ((i % 50) / 50) * Math.PI * 2 + cursorAngle;
-        const radius = 90 + (layer * 40); // closer orbit
-        const x = Math.cos(angle) * radius;
-        const y = Math.sin(angle) * radius;
-
-        // Position and rotation
-        cursor.style.left = `${x - 16}px`;
-        cursor.style.top = `${y - 16}px`;
-        const rotationDeg = (angle * 180 / Math.PI) - 90;
-        cursor.style.transform = `rotate(${rotationDeg}deg)`;
       });
+      upgradesContainer.appendChild(div);
+    });
+  }
 
-      requestAnimationFrame(animate);
+  renderUpgrades();
+
+  // Click behavior
+  clickCircle.addEventListener("click",()=>{
+    clicks++;
+    clickCountEl.textContent=Math.floor(clicks);
+    scale=1.1;
+    shrinking=true;
+  });
+
+  // Buy cursor
+  buyCursorBtn.addEventListener("click",()=>{
+    if(clicks>=cursorCost){
+      clicks-=cursorCost;
+      cursors++;
+      cursorCost=Math.floor(15*Math.pow(1.15,cursors));
+      clickCountEl.textContent=Math.floor(clicks);
+      buyCursorBtn.textContent=`Buy (Cost: ${cursorCost})`;
+      cursorCountEl.textContent=cursors;
+      addCursor();
+      updateCPS();
+      renderUpgrades();
     }
-    animate();
+  });
 
-    // Cursor passive income (0.1 click/sec each)
-    setInterval(() => {
-      if (cursors > 0) {
-        clicks += cursors * 0.1;
-        clickCountEl.textContent = Math.floor(clicks);
-      }
-    }, 1000);
-  </script>
+  function addCursor(){
+    const img=document.createElement("img");
+    img.src=cursorImage;
+    img.className="cursor";
+    cursorContainer.appendChild(img);
+  }
+
+  function updateCPS(){
+    cps=cursors*cursorPower;
+    cpsEl.textContent=cps.toFixed(1);
+  }
+
+  // Animation loop
+  function animate(){
+    if(shrinking){
+      scale-=0.01;
+      if(scale<=1){scale=1;shrinking=false;}
+    }
+    clickCircle.style.transform=`translate(-50%,-50%) scale(${scale})`;
+    // orbit cursors
+    const cursorEls=document.querySelectorAll(".cursor");
+    cursorAngle+=0.01;
+    cursorEls.forEach((cursor,i)=>{
+      const layer=Math.floor(i/50);
+      const angle=((i%50)/50)*Math.PI*2+cursorAngle;
+      const radius=90+(layer*40);
+      const x=Math.cos(angle)*radius;
+      const y=Math.sin(angle)*radius;
+      cursor.style.left=`${x-16}px`;
+      cursor.style.top=`${y-16}px`;
+      const rotationDeg=(angle*180/Math.PI)-90; // face toward circle
+      cursor.style.transform=`rotate(${rotationDeg}deg)`;
+    });
+    requestAnimationFrame(animate);
+  }
+  animate();
+
+  // Smooth incremental clicks (CPS / 10 every 0.1s)
+  setInterval(()=>{
+    if(cps>0){
+      clicks+=cps/10;
+      clickCountEl.textContent=Math.floor(clicks);
+      renderUpgrades();
+    }
+  },100);
+
+  // Info section
+  const btnUpdates=document.getElementById("btn-updates");
+  const btnSettings=document.getElementById("btn-settings");
+
+  btnUpdates.addEventListener("click",()=>{
+    infoDisplay.innerHTML=`<h3>Patch Notes - v1.1.0</h3>
+    <ul>
+      <li>Added 3-column layout (mobile-friendly!)</li>
+      <li>Introduced CPS system with smooth income</li>
+      <li>Added Upgrades: Reinforced Index Finger, Carpal Tunnel Cream, Ambidextrous</li>
+      <li>Added Settings and Updates tabs</li>
+      <li>Improved visuals and mobile compatibility</li>
+    </ul>`;
+  });
+
+  btnSettings.addEventListener("click",()=>{
+    infoDisplay.innerHTML=`<h3>Settings</h3>
+    <p>No settings yet. Future updates will include sound, themes, and data saving!</p>`;
+  });
+
+  // Default to show patch notes
+  btnUpdates.click();
+</script>
 </body>
 </html>
