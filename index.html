@@ -188,8 +188,8 @@ function addOrbitingCursor(){
 }
 function positionCursors(angleOffset){
   const cursors=[...cursorContainer.children];
-  const baseRadius=60;
-  const perRing=50;
+  const baseRadius=80;
+  const perRing=80;
   let index=0,layer=0;
   while(index<cursors.length){
     const countInRing=Math.min(perRing,cursors.length-index);
@@ -201,7 +201,7 @@ function positionCursors(angleOffset){
       const y=Math.sin(angle)*radius;
       node.style.left=(x-16)+"px";
       node.style.top=(y-16)+"px";
-      node.style.transform=`rotate(${(angle*180/Math.PI)+90}deg)`;
+      node.style.transform=`rotate(${(angle*180/Math.PI)-90}deg)`;
     }
     index+=countInRing;layer++;
   }
