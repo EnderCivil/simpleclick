@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Circle Clicker</title>
+  <style>
+    body {
+      background: #f2f2f2;
+      text-align: center;
+      font-family: Arial, sans-serif;
+      margin-top: 40px;
+    }
+
+    #game-container {
+      position: relative;
+      width: 400px;
+      height: 400px;
+      margin: 0 auto;
+    }
+
+    #click-circle {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 120px;
+      height: 120px;
+      background: black;
+      border-radius: 50%;
+      transform: translate(-50%, -50%) scale(1);
+      cursor: pointer;
+      transition: transform 0.05s linear;
+    }
+
+    #cursor-container {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      transform: translate(-50%, -50%);
+    }
+
+    .cursor {
+      position: absolute;
+      width: 32px;
+      height: 32px;
+      transform-origin: center;
+    }
+
+    #ui {
+      margin-top: 20px;
+    }
+
+    button {
+      padding: 8px 15px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <div id="click-circle"></div>
+    <div id="cursor-container"></div>
+  </div>
+
+  <div id="ui">
+    <h1>Circle Clicker</h1>
+    <p>Clicks: <span id="click-count">0</span></p>
+    <button id="buy-cursor">Buy Cursor (Cost: 15)</button>
+  </div>
+
+  <script>
+    const clickCircle = document.getElementById("click-circle");
+    const clickCountEl = document.getElementById("click-count");
+    const buyCursorBtn = document.getElementById("buy-cursor");
+    const cursorContainer = document.getElementById("cursor-container");
+
+    const cursorImage = "https://images.vexels.com/media/users/3/131773/isolated/svg/790c78d39fd853ae72167411aa11d727.svg";
+
+    let clicks = 0;
+    let cursors = 0;
+    let cursorCost = 15;
+    let scale = 1;
+    let targetScale = 1;
+    let cursorAngle = 0;
+
+    // Click to earn
+    clickCircle.addEventListener("click", () => {
+      clicks++;
+      clickCountEl.textContent = clicks;
+      targetScale = 1.1; // Pulse up
+    });
+
+    // Cursor purchase
+    buyCursorBtn.addEventListener("click", () => {
+      if (clicks >= cursorCost) {
+        clicks -= cursorCost;
+        cursors++;
+        clickCountEl.textContent = clicks;
+        cursorCost = Math.floor(15 * Math.pow(1.15, cursors));
+        buyCursorBtn.textContent = `Buy Cursor (Cost: ${cursorCost})`;
+        addCursor();
+      }
+    });
+
+    // Create cursor visual
+    function addCursor() {
+      const img = document.createElement("img");
+      img.src = cursorImage;
+      img.className = "cursor";
+      cursorContainer.appendChild(img);
+    }
+
+    // Animation loop
+    setInterval(() => {
+      // Shrink back down gradually
+      if (scale < targetScale) scale += 0.02;
+      else if (scale > 1) scale -= 0.01;
+      if (scale < 1) scale = 1;
+      clickCircle.style.transform = `translate(-50%, -50%) scale(${scale})`;
+
+      // Revolve cursors
+      const cursorEls = document.querySelectorAll(".cursor");
+      const total = cursorEls.length;
+      let layer = 0;
+
+      cursorAngle += 0.01; // Rotation speed
+
+      cursorEls.forEach((cursor, i) => {
+        layer = Math.floor(i / 50);
+        const angle = ((i % 50) / 50) * Math.PI * 2 + cursorAngle;
+        const radius = 150 + (layer * 40);
+        const x = Math.cos(angle) * radius;
+        const y = Math.sin(angle) * radius;
+        cursor.style.left = `${x - 16}px`;
+        cursor.style.top = `${y - 16}px`;
+      });
+    }, 16);
+
+    // Cursor passive income (0.1 click/sec each)
+    setInterval(() => {
+      if (cursors > 0) {
+        clicks += cursors * 0.1;
+        clickCountEl.textContent = Math.floor(clicks);
+      }
+    }, 1000);
+  </script>
+</body>
+</html>
