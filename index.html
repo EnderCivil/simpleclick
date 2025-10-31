@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Circle Clicker — fixed</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Circle Clicker — full upgrade version</title>
 <style>
 :root{--bg:#f2f2f2;--card:#fff;--muted:#ddd}
 body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#111;min-height:100vh;display:flex;gap:10px}
@@ -89,7 +89,7 @@ button{background:var(--card);border:1px solid #aaa;padding:7px 10px;border-radi
 <!-- POPUP -->
 <div id="popup-bg" onclick="if(event.target===this) closePopup()">
   <div id="popup" role="dialog" aria-modal="true">
-    <img id="popup-icon" alt="" />
+    <img id="popup-icon" alt="">
     <h3 id="popup-title"></h3>
     <div id="popup-desc" style="margin:8px 0"></div>
     <div id="popup-effect" style="font-weight:600;margin-bottom:6px"></div>
@@ -102,7 +102,6 @@ button{background:var(--card);border:1px solid #aaa;padding:7px 10px;border-radi
 </div>
 
 <script>
-// --- Data ---
 const cursorOrbitImg = "https://upload.wikimedia.org/wikipedia/commons/8/83/Cursor_icon.svg";
 let state = {
   clicks: 0,
@@ -113,124 +112,153 @@ let state = {
   baseCursorCPS: 0.1,
   baseGrandmaCPS: 1,
   multiplier_cursor: 1,
-  multiplier_grandma: 1
+  multiplier_grandma: 1,
+  upgrades: []
 };
 
+// --- Upgrades List ---
+state.upgrades = [
+  {id:'rif',name:'Reinforced Index Finger',desc:'Doubles cursor effectiveness.',cost:100,reqType:'cursor',reqCount:1,icon:'https://static.wikia.nocookie.net/cookieclicker/images/d/d2/Plain_cursor.png',bought:false,apply:()=>{state.multiplier_cursor*=2}},
+  {id:'cream',name:'Carpal Tunnel Prevention Cream',desc:'Doubles cursor effectiveness again.',cost:500,reqType:'cursor',reqCount:1,icon:'https://static.wikia.nocookie.net/cookieclicker/images/0/01/Berrylium_cursor.png',bought:false,apply:()=>{state.multiplier_cursor*=2}},
+  {id:'ambi',name:'Ambidextrous',desc:'Doubles cursor effectiveness once more.',cost:10000,reqType:'cursor',reqCount:10,icon:'https://static.wikia.nocookie.net/cookieclicker/images/2/2e/Blueberrylium_cursor.png',bought:false,apply:()=>{state.multiplier_cursor*=2}},
+  {id:'g1',name:'Forwards from grandma',desc:'Doubles grandma effectiveness.',cost:1000,reqType:'grandma',reqCount:1,icon:'https://static.wikia.nocookie.net/cookieclicker/images/0/00/Plain_grandma.png',bought:false,apply:()=>{state.multiplier_grandma*=2}},
+  {id:'g2',name:'Steel-plated rolling pins',desc:'Doubles grandma effectiveness again.',cost:5000,reqType:'grandma',reqCount:5,icon:'https://static.wikia.nocookie.net/cookieclicker/images/d/dc/Berrylium_grandma.png',bought:false,apply:()=>{state.multiplier_grandma*=2}},
+  {id:'g3',name:'Lubricated dentures',desc:'Doubles grandma effectiveness once more.',cost:50000,reqType:'grandma',reqCount:25,icon:'https://static.wikia.nocookie.net/cookieclicker/images/2/2a/Blueberrylium_grandma.png',bought:false,apply:()=>{state.multiplier_grandma*=2}}
+];
+
+// --- Elements ---
 const clickCircle = document.getElementById("click-circle");
 const clickCountEl = document.getElementById("clicks");
 const cpsEl = document.getElementById("cps");
 const cursorContainer = document.getElementById("cursor-container");
-const storeCursorImgEl = document.getElementById("store-cursor-img");
-const storeGrandmaImgEl = document.getElementById("store-grandma-img");
-storeCursorImgEl.src = cursorOrbitImg;
-storeGrandmaImgEl.src = "https://upload.wikimedia.org/wikipedia/commons/d/d8/Emoji_u1f475.svg";
+const upgradeListEl = document.getElementById("upgrade-list");
+document.getElementById("store-cursor-img").src = cursorOrbitImg;
+document.getElementById("store-grandma-img").src = "https://upload.wikimedia.org/wikipedia/commons/d/d8/Emoji_u1f475.svg";
 
 // --- Display ---
-function getCPS() {
+function getCPS(){
   return (state.cursors * state.baseCursorCPS * state.multiplier_cursor) +
          (state.grandmas * state.baseGrandmaCPS * state.multiplier_grandma);
 }
-function updateDisplay() {
+function updateDisplay(){
   clickCountEl.textContent = "Clicks: " + Math.floor(state.clicks);
   cpsEl.textContent = "CPS: " + getCPS().toFixed(2);
   document.getElementById("cursor-count").textContent = state.cursors;
   document.getElementById("grandma-count").textContent = state.grandmas;
   document.getElementById("buy-cursor-btn").textContent = `Buy (${state.cursorCost})`;
   document.getElementById("buy-grandma-btn").textContent = `Buy (${state.grandmaCost})`;
+  updateUpgradeList();
 }
 
-// --- Click circle ---
-let scale = 1;
-clickCircle.addEventListener("click", () => {
-  state.clicks += 1;
+// --- Circle click ---
+clickCircle.addEventListener("click",()=>{
+  state.clicks++;
   updateDisplay();
-  scale = 1.1;
-  clickCircle.style.transform = "translate(-50%, -50%) scale(1.1)";
-  setTimeout(() => clickCircle.style.transform = "translate(-50%, -50%) scale(1)", 80);
+  clickCircle.style.transform="translate(-50%,-50%) scale(1.1)";
+  setTimeout(()=>clickCircle.style.transform="translate(-50%,-50%) scale(1)",80);
 });
 
 // --- Store logic ---
-function buyCursor() {
-  if (state.clicks >= state.cursorCost) {
-    state.clicks -= state.cursorCost;
+function buyCursor(){
+  if(state.clicks>=state.cursorCost){
+    state.clicks-=state.cursorCost;
     state.cursors++;
-    state.cursorCost = Math.floor(15 * Math.pow(1.15, state.cursors));
+    state.cursorCost=Math.floor(15*Math.pow(1.15,state.cursors));
     addOrbitingCursor();
     updateDisplay();
   }
 }
-function buyGrandma() {
-  if (state.clicks >= state.grandmaCost) {
-    state.clicks -= state.grandmaCost;
+function buyGrandma(){
+  if(state.clicks>=state.grandmaCost){
+    state.clicks-=state.grandmaCost;
     state.grandmas++;
-    state.grandmaCost = Math.floor(100 * Math.pow(1.15, state.grandmas));
+    state.grandmaCost=Math.floor(100*Math.pow(1.15,state.grandmas));
     updateDisplay();
   }
 }
-document.getElementById("buy-cursor-btn").onclick = buyCursor;
-document.getElementById("buy-grandma-btn").onclick = buyGrandma;
+document.getElementById("buy-cursor-btn").onclick=buyCursor;
+document.getElementById("buy-grandma-btn").onclick=buyGrandma;
 
-// --- Cursor visuals ---
-function addOrbitingCursor() {
-  const img = document.createElement("img");
-  img.className = "cursor";
-  img.src = storeCursorImgEl.src;
+// --- Cursors orbit ---
+function addOrbitingCursor(){
+  const img=document.createElement("img");
+  img.className="cursor";
+  img.src=cursorOrbitImg;
   cursorContainer.appendChild(img);
 }
-
-function positionCursors(angleOffset) {
-  const cursors = Array.from(cursorContainer.children);
-  const baseRadius = 60; // closer to circle
-  const perRing = 50;
-  let index = 0, layer = 0;
-  while (index < cursors.length) {
-    const countInRing = Math.min(perRing, cursors.length - index);
-    for (let i = 0; i < countInRing; i++) {
-      const node = cursors[index + i];
-      const angle = (i / countInRing) * Math.PI * 2 + angleOffset + layer * 0.03;
-      const radius = baseRadius + layer * 42;
-      const x = Math.cos(angle) * radius;
-      const y = Math.sin(angle) * radius;
-      node.style.left = (x - 16) + "px";
-      node.style.top = (y - 16) + "px";
-      // rotate to face inward (toward circle)
-      const rotationDeg = (angle * 180 / Math.PI) + 90;
-      node.style.transform = `rotate(${rotationDeg}deg)`;
+function positionCursors(angleOffset){
+  const cursors=[...cursorContainer.children];
+  const baseRadius=60;
+  const perRing=50;
+  let index=0,layer=0;
+  while(index<cursors.length){
+    const countInRing=Math.min(perRing,cursors.length-index);
+    for(let i=0;i<countInRing;i++){
+      const node=cursors[index+i];
+      const angle=(i/countInRing)*Math.PI*2+angleOffset+layer*0.03;
+      const radius=baseRadius+layer*42;
+      const x=Math.cos(angle)*radius;
+      const y=Math.sin(angle)*radius;
+      node.style.left=(x-16)+"px";
+      node.style.top=(y-16)+"px";
+      node.style.transform=`rotate(${(angle*180/Math.PI)+90}deg)`;
     }
-    index += countInRing;
-    layer++;
+    index+=countInRing;layer++;
   }
 }
 
 // --- Passive CPS ---
-setInterval(() => {
-  state.clicks += getCPS() / 10;
+setInterval(()=>{
+  state.clicks+=getCPS()/10;
   updateDisplay();
-}, 100);
+},100);
 
 // --- Animation ---
-let angleOffset = 0;
-function animate() {
-  angleOffset += 0.03;
+let angleOffset=0;
+function animate(){
+  angleOffset+=0.03;
   positionCursors(angleOffset);
   requestAnimationFrame(animate);
 }
 animate();
 
-// --- Buttons ---
-document.getElementById("btn-updates").onclick = () => {
-  document.getElementById("info-display").innerHTML = `
-    <h3>Patch Notes — v1.1.1</h3>
-    <ul>
-      <li>Fixed circle scaling bug</li>
-      <li>Cursors now face inward</li>
-      <li>Clicks display fixed (no decimals)</li>
-      <li>Adjusted cursor orbit distance</li>
-    </ul>`;
-};
-document.getElementById("btn-settings").onclick = () => {
-  document.getElementById("info-display").innerHTML = `<h3>Settings</h3><p>Coming soon...</p>`;
-};
+// --- Upgrades ---
+function updateUpgradeList(){
+  upgradeListEl.innerHTML="";
+  state.upgrades.forEach(u=>{
+    const ownedCount=state[u.reqType+"s"]||0;
+    if(!u.bought && ownedCount>=u.reqCount){
+      const row=document.createElement("div");
+      row.className="upgrade-row";
+      row.innerHTML=`<div class="store-left"><img src="${u.icon}" class="smallimg"><div><strong>${u.name}</strong><div style="font-size:12px">${u.desc}</div></div></div><button>Buy (${u.cost})</button>`;
+      row.querySelector("button").onclick=()=>showUpgradePopup(u);
+      upgradeListEl.appendChild(row);
+    }
+  });
+}
+function showUpgradePopup(u){
+  document.getElementById("popup-bg").style.display="flex";
+  document.getElementById("popup-icon").src=u.icon;
+  document.getElementById("popup-title").textContent=u.name;
+  document.getElementById("popup-desc").textContent=u.desc;
+  document.getElementById("popup-effect").textContent=`Effect: Doubles ${u.reqType} effectiveness`;
+  document.getElementById("popup-cost").textContent=u.cost;
+  const buy=document.getElementById("popup-buy");
+  buy.onclick=()=>{
+    if(state.clicks>=u.cost){
+      state.clicks-=u.cost;
+      u.bought=true;
+      u.apply();
+      closePopup();
+      updateDisplay();
+    }
+  };
+}
+function closePopup(){document.getElementById("popup-bg").style.display="none";}
+
+// --- Info Buttons ---
+document.getElementById("btn-updates").onclick=()=>document.getElementById("info-display").innerHTML="<h3>Patch Notes</h3><ul><li>Upgrades restored and fixed!</li><li>Cursors orbit properly.</li><li>Click counter cleaned.</li></ul>";
+document.getElementById("btn-settings").onclick=()=>document.getElementById("info-display").innerHTML="<h3>Settings</h3><p>Coming soon...</p>";
 
 updateDisplay();
 </script>
