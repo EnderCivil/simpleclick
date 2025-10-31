@@ -111,6 +111,7 @@ let state = {
   grandmaCost: 100,
   baseCursorCPS: 0.1,
   baseGrandmaCPS: 1,
+  multiplier_click: 1,
   multiplier_cursor: 1,
   multiplier_grandma: 1,
   upgrades: []
@@ -118,9 +119,9 @@ let state = {
 
 // --- Upgrades List ---
 state.upgrades = [
-  {id:'rif',name:'Reinforced Index Finger',desc:'Doubles cursor effectiveness.',cost:100,reqType:'cursor',reqCount:1,icon:'https://static.wikia.nocookie.net/cookieclicker/images/d/d2/Plain_cursor.png',bought:false,apply:()=>{state.multiplier_cursor*=2}},
-  {id:'cream',name:'Carpal Tunnel Prevention Cream',desc:'Doubles cursor effectiveness again.',cost:500,reqType:'cursor',reqCount:1,icon:'https://static.wikia.nocookie.net/cookieclicker/images/0/01/Berrylium_cursor.png',bought:false,apply:()=>{state.multiplier_cursor*=2}},
-  {id:'ambi',name:'Ambidextrous',desc:'Doubles cursor effectiveness once more.',cost:10000,reqType:'cursor',reqCount:10,icon:'https://static.wikia.nocookie.net/cookieclicker/images/2/2e/Blueberrylium_cursor.png',bought:false,apply:()=>{state.multiplier_cursor*=2}},
+  {id:'rif',name:'Reinforced Index Finger',desc:'Doubles cursor effectiveness.',cost:100,reqType:'cursor',reqCount:1,icon:'https://static.wikia.nocookie.net/cookieclicker/images/d/d2/Plain_cursor.png',bought:false,apply:()=>{state.multiplier_cursor*=2; state.multiplier_click *= 2;}},
+  {id:'cream',name:'Carpal Tunnel Prevention Cream',desc:'Doubles cursor effectiveness again.',cost:500,reqType:'cursor',reqCount:1,icon:'https://static.wikia.nocookie.net/cookieclicker/images/0/01/Berrylium_cursor.png',bought:false,apply:()=>{state.multiplier_cursor*=2; state.multiplier_click *= 2;}},
+  {id:'ambi',name:'Ambidextrous',desc:'Doubles cursor effectiveness once more.',cost:10000,reqType:'cursor',reqCount:10,icon:'https://static.wikia.nocookie.net/cookieclicker/images/2/2e/Blueberrylium_cursor.png',bought:false,apply:()=>{state.multiplier_cursor*=2; state.multiplier_click *= 2;}},
   {id:'g1',name:'Forwards from grandma',desc:'Doubles grandma effectiveness.',cost:1000,reqType:'grandma',reqCount:1,icon:'https://static.wikia.nocookie.net/cookieclicker/images/0/00/Plain_grandma.png',bought:false,apply:()=>{state.multiplier_grandma*=2}},
   {id:'g2',name:'Steel-plated rolling pins',desc:'Doubles grandma effectiveness again.',cost:5000,reqType:'grandma',reqCount:5,icon:'https://static.wikia.nocookie.net/cookieclicker/images/d/dc/Berrylium_grandma.png',bought:false,apply:()=>{state.multiplier_grandma*=2}},
   {id:'g3',name:'Lubricated dentures',desc:'Doubles grandma effectiveness once more.',cost:50000,reqType:'grandma',reqCount:25,icon:'https://static.wikia.nocookie.net/cookieclicker/images/2/2a/Blueberrylium_grandma.png',bought:false,apply:()=>{state.multiplier_grandma*=2}}
@@ -152,11 +153,17 @@ function updateDisplay(){
 
 // --- Circle click ---
 clickCircle.addEventListener("click",()=>{
+  const gain = state.cookiesPerClick * state.multiplier_click;
+  state.cookies += gain;
   state.clicks++;
+
   updateDisplay();
-  clickCircle.style.transform="translate(-50%,-50%) scale(1.1)";
-  setTimeout(()=>clickCircle.style.transform="translate(-50%,-50%) scale(1)",80);
+
+  // Click animation
+  clickCircle.style.transform = "translate(-50%, -50%) scale(1.1)";
+  setTimeout(() => clickCircle.style.transform = "translate(-50%, -50%) scale(1)", 80);
 });
+
 
 // --- Store logic ---
 function buyCursor(){
