@@ -44,7 +44,7 @@
       position: absolute;
       width: 32px;
       height: 32px;
-      transform-origin: center;
+      transform-origin: center center;
     }
 
     #ui {
@@ -84,27 +84,29 @@
     let scale = 1;
     let targetScale = 1;
     let cursorAngle = 0;
+    let shrinking = false;
 
     // Click to earn
     clickCircle.addEventListener("click", () => {
       clicks++;
-      clickCountEl.textContent = clicks;
-      targetScale = 1.1; // Pulse up
+      clickCountEl.textContent = Math.floor(clicks);
+      scale = 1.1;
+      shrinking = true;
     });
 
-    // Cursor purchase
+    // Buy cursor
     buyCursorBtn.addEventListener("click", () => {
       if (clicks >= cursorCost) {
         clicks -= cursorCost;
         cursors++;
-        clickCountEl.textContent = clicks;
+        clickCountEl.textContent = Math.floor(clicks);
         cursorCost = Math.floor(15 * Math.pow(1.15, cursors));
         buyCursorBtn.textContent = `Buy Cursor (Cost: ${cursorCost})`;
         addCursor();
       }
     });
 
-    // Create cursor visual
+    // Add a cursor
     function addCursor() {
       const img = document.createElement("img");
       img.src = cursorImage;
@@ -113,30 +115,39 @@
     }
 
     // Animation loop
-    setInterval(() => {
-      // Shrink back down gradually
-      if (scale < targetScale) scale += 0.02;
-      else if (scale > 1) scale -= 0.01;
-      if (scale < 1) scale = 1;
+    function animate() {
+      // Shrink effect
+      if (shrinking) {
+        scale -= 0.01;
+        if (scale <= 1) {
+          scale = 1;
+          shrinking = false;
+        }
+      }
       clickCircle.style.transform = `translate(-50%, -50%) scale(${scale})`;
 
-      // Revolve cursors
+      // Cursor rotation
       const cursorEls = document.querySelectorAll(".cursor");
       const total = cursorEls.length;
-      let layer = 0;
-
-      cursorAngle += 0.01; // Rotation speed
+      cursorAngle += 0.01;
 
       cursorEls.forEach((cursor, i) => {
-        layer = Math.floor(i / 50);
+        const layer = Math.floor(i / 50);
         const angle = ((i % 50) / 50) * Math.PI * 2 + cursorAngle;
-        const radius = 150 + (layer * 40);
+        const radius = 90 + (layer * 40); // closer orbit
         const x = Math.cos(angle) * radius;
         const y = Math.sin(angle) * radius;
+
+        // Position and rotation
         cursor.style.left = `${x - 16}px`;
         cursor.style.top = `${y - 16}px`;
+        const rotationDeg = (angle * 180 / Math.PI) + 90;
+        cursor.style.transform = `rotate(${rotationDeg}deg)`;
       });
-    }, 16);
+
+      requestAnimationFrame(animate);
+    }
+    animate();
 
     // Cursor passive income (0.1 click/sec each)
     setInterval(() => {
