@@ -111,11 +111,13 @@ let state = {
   grandmaCost: 100,
   baseCursorCPS: 0.1,
   baseGrandmaCPS: 1,
+  baseClickPower: 1, // 🆕 Base clicks per click
   multiplier_click: 1,
   multiplier_cursor: 1,
   multiplier_grandma: 1,
   upgrades: []
 };
+
 
 // --- Upgrades List ---
 state.upgrades = [
@@ -153,11 +155,16 @@ function updateDisplay(){
 
 // --- Circle click ---
 clickCircle.addEventListener("click",()=>{
-  const gain = state.cookiesPerClick * state.multiplier_click;
-  state.cookies += gain;
-  state.clicks++;
+  const gain = state.baseClickPower * state.multiplier_click;
+  state.clicks += gain;
 
   updateDisplay();
+
+  // Click animation
+  clickCircle.style.transform = "translate(-50%, -50%) scale(1.1)";
+  setTimeout(() => clickCircle.style.transform = "translate(-50%, -50%) scale(1)", 80);
+});
+
 
   // Click animation
   clickCircle.style.transform = "translate(-50%, -50%) scale(1.1)";
