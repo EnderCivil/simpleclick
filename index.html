@@ -154,13 +154,6 @@ function updateDisplay(){
 }
 
 // --- Circle click ---
-clickCircle.addEventListener("click",()=>{
-  const gain = state.baseClickPower * state.multiplier_click;
-  state.clicks += gain;
-
-  updateDisplay();
-
-// --- Circle click ---
 clickCircle.addEventListener("click", () => {
   const gain = state.baseClickPower * state.multiplier_click;
   state.clicks += gain;
