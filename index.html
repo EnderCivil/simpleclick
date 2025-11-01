@@ -182,7 +182,7 @@ function updateDisplay(){
   cpsEl.textContent = "CPS: " + getCPS().toFixed(2);
   document.getElementById("cursor-count").textContent = state.cursors;
   document.getElementById("grandma-count").textContent = state.grandmas;
-  document.getElemenyById("farm-count").textContent = state.farms;
+  document.getElementById("farm-count").textContent = state.farms;
   document.getElementById("buy-cursor-btn").textContent = `Buy (${state.cursorCost})`;
   document.getElementById("buy-grandma-btn").textContent = `Buy (${state.grandmaCost})`;
   updateUpgradeList();
