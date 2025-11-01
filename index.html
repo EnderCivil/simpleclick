@@ -284,6 +284,452 @@ function updateDisplay(){
   document.getElementById("buy-cursor-btn").textContent = `Buy (${state.cursorCost})`;
   document.getElementById("buy-grandma-btn").textContent = `Buy (${state.grandmaCost})`;
     document.getElementById("buy-farm-btn").textContent = `Buy (${state.farmCost})`;
+  if (document.getElementById("info-display").innerHTML.includes("Achievements"))
+  showUpgradesProgress();
+
+  updateUpgradeList();
+}
+
+clickCircle.addEventListener("click", () => {
+  // Base gain from cursor
+  let gain = state.baseClickPower * state.multiplier_click;
+
+  // Thousand Fingers effect: every non-cursor building contributes
+  let nonCursorBuildings = state.grandmas + state.farms;
+  gain += nonCursorBuildings * 0.1 * state.thousandFingersMultiplier;
+
+  state.clicks += gain;
+  updateDisplay();
+
+  checkAchievements(); // 👈 Check for new achievements when clicking
+
+  // Click animation
+  clickCircle.style.transform = "translate(-50%, -50%) scale(1.1)";
+  setTimeout(() => clickCircle.style.transform = "translate(-50%, -50%) scale(1)", 80);
+});
+
+
+
+
+// --- Store logic ---
+function buyCursor(){
+  if(state.clicks>=state.cursorCost){
+    state.clicks-=state.cursorCost;
+    state.cursors++;
+    state.cursorCost=Math.floor(15*Math.pow(1.15,state.cursors));
+    addOrbitingCursor();
+    updateDisplay();
+    checkAchievements();
+  }
+}
+function buyGrandma(){
+  if(state.clicks>=state.grandmaCost){
+    state.clicks-=state.grandmaCost;
+    state.grandmas++;
+    state.grandmaCost=Math.floor(100*Math.pow(1.15,state.grandmas));
+    updateDisplay();
+    checkAchievements();
+  }
+}
+function buyFarm(){
+  if(state.clicks>=state.farmCost){
+    state.clicks-=state.farmCost;
+    state.farms++;
+    state.farmCost=Math.floor(100*Math.pow(1.15,state.farms));
+    updateDisplay();
+    checkAchievements();
+  }
+}
+document.getElementById("buy-cursor-btn").onclick=buyCursor;
+document.getElementById("buy-grandma-btn").onclick=buyGrandma;
+document.getElementById("buy-farm-btn").onclick=buyFarm;
+
+// --- Cursors orbit ---
+function addOrbitingCursor(){
+  const img=document.createElement("img");
+  img.className="cursor";
+  img.src=cursorOrbitImg;
+  cursorContainer.appendChild(img);
+}
+function positionCursors(angleOffset){
+  const cursors=[...cursorContainer.children];
+  const baseRadius=80;
+  const perRing=25;
+  let index=0,layer=0;
+  while(index<cursors.length){
+    const countInRing=Math.min(perRing,cursors.length-index);
+    for(let i=0;i<countInRing;i++){
+      const node=cursors[index+i];
+      const angle=(i/countInRing)*Math.PI*2+angleOffset+layer*0.03;
+      const radius=baseRadius+layer*42;
+      const x=Math.cos(angle)*radius;
+      const y=Math.sin(angle)*radius;
+      node.style.left=(x-16)+"px";
+      node.style.top=(y-16)+"px";
+      node.style.transform=`rotate(${(angle*180/Math.PI)-90}deg)`;
+    }
+    index+=countInRing;layer++;
+  }
+}
+
+// --- Passive CPS ---
+setInterval(()=>{
+  state.clicks+=getCPS()/10;
+  updateDisplay();
+},100);
+
+// --- Animation ---
+let angleOffset=0;
+function animate(){
+  angleOffset+=0.03;
+  positionCursors(angleOffset);
+  requestAnimationFrame(animate);
+}
+animate();
+
+// Upgrades
+function updateUpgradeList(){
+  upgradeListEl.innerHTML="";
+  state.upgrades.forEach(u=>{
+    const ownedCount = state[u.reqType+"s"] || 0;
+    if(!u.bought && ownedCount >= u.reqCount){
+      const row = document.createElement("div");
+      row.className = "upgrade-row";
+      row.innerHTML = `<div class="store-left">
+                          <img src="${u.icon}" class="smallimg">
+                          <div><strong>${u.name}</strong><div style="font-size:12px">${u.desc}</div></div>
+                       </div>
+                       <button>Buy (${u.cost})</button>`;
+      
+// Make entire upgrade row clickable (not just the button)
+row.addEventListener("click", () => {
+  if (state.clicks >= u.cost) {
+    state.clicks -= u.cost;
+    u.bought = true;
+    u.apply();
+    updateDisplay();
+  }
+});
+
+
+      upgradeListEl.appendChild(row);
+    }
+  });
+}
+
+function showUpgradePopup(u){
+  document.getElementById("popup-bg").style.display="flex";
+  document.getElementById("popup-icon").src=u.icon;
+  document.getElementById("popup-title").textContent=u.name;
+  document.getElementById("popup-desc").textContent=u.desc;
+  document.getElementById("popup-effect").textContent=`Effect: Doubles ${u.reqType} effectiveness`;
+  document.getElementById("popup-cost").textContent=u.cost;
+  const buy=document.getElementById("popup-buy");
+  buy.onclick=()=>{
+    if(state.clicks>=u.cost){
+      state.clicks-=u.cost;
+      u.bought=true;
+      u.apply();
+      closePopup();
+      updateDisplay();
+    }
+  };
+}
+function closePopup(){document.getElementById("popup-bg").style.display="none";}
+
+// --- Info Buttons ---
+document.getElementById("btn-updates").onclick=()=>document.getElementById("info-display").innerHTML="<h3>Patch Notes</h3><ul><li>Upgrades restored and fixed!</li><li>Cursors orbit properly.</li><li>Click counter cleaned.</li></ul>";
+document.getElementById("btn-settings").onclick=()=>document.getElementById("info-display").innerHTML="<h3>Settings</h3><p>Coming soon...</p>";
+// Fix syntax for thousandFingersMultiplier
+state.thousandFingersMultiplier = 0; // if you kept old semicolon, remove it
+
+// --- Upgrades Progress Menu ---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Circle Clicker — full upgrade version</title>
+<style>
+:root{--bg:#f2f2f2;--card:#fff;--muted:#ddd}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#111;min-height:100vh;display:flex;gap:10px}
+.column{flex:1;padding:12px;box-sizing:border-box}
+@media (max-width:900px){body{flex-direction:column}}
+#game-column{display:flex;flex-direction:column;align-items:center}
+#game-inner{margin-top:80px;width:100%;display:flex;flex-direction:column;align-items:center}
+#clicks{font-size:18px;margin:6px 0}
+#cps{font-size:14px;margin:3px 0;color:#333}
+#game-container{position:relative;width:360px;height:360px;background:transparent}
+#click-circle{position:absolute;top:50%;left:50%;width:120px;height:120px;border-radius:50%;background:black;transform:translate(-50%,-50%) scale(1);cursor:pointer;transition:transform 0.08s ease-out}
+#cursor-container{position:absolute;top:50%;left:50%;width:0;height:0;transform:translate(-50%,-50%)}
+.cursor{position:absolute;width:32px;height:32px;transform-origin:center center;pointer-events:none}
+#middle-buttons{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+#info-display{background:var(--card);padding:10px;border-radius:8px;min-height:200px;max-height:60vh;overflow:auto}
+button{background:var(--card);border:1px solid #aaa;padding:7px 10px;border-radius:6px;cursor:pointer}
+.panel{background:var(--card);padding:10px;border-radius:8px}
+.store-row,.upgrade-row{display:flex;align-items:center;justify-content:space-between;padding:6px;border-radius:6px;margin:6px 0;background:var(--muted)}
+.store-left{display:flex;align-items:center;gap:8px}
+.smallimg{width:38px;height:38px;object-fit:contain}
+.count{min-width:36px;text-align:center}
+#popup-bg{display:none;position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;z-index:999}
+#popup{background:white;color:#111;padding:16px;border-radius:10px;max-width:92%;width:320px}
+#popup img{width:48px;height:48px;display:block;margin:0 auto 8px}
+.locked{opacity:0.5;pointer-events:none}
+.note{font-size:12px;color:#444;margin-top:6px}
+#achievement-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.achievement-popup {
+  background: rgba(30, 30, 30, 0.95);
+  color: white;
+  padding: 10px 14px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  opacity: 0;
+  transform: translateX(100%);
+  animation: slideIn 0.4s forwards, fadeOut 0.4s ease forwards 4s;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.achievement-popup img {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(100%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadeOut {
+  to { opacity: 0; transform: translateX(100%); }
+}
+
+</style>
+</head>
+<body>
+
+<!-- LEFT: Game -->
+<div class="column" id="game-column">
+  <div id="game-inner">
+    <div id="clicks">Clicks: 0</div>
+    <div id="cps">CPS: 0.0</div>
+    <div id="game-container">
+      <div id="click-circle" title="Click me"></div>
+      <div id="cursor-container"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MIDDLE: Info -->
+<div class="column">
+  <div id="middle-buttons">
+    <button id="btn-updates">Updates</button>
+    <button id="btn-settings">Settings</button>
+    <button id="btn-upgrades-progress">Statistics</button>
+  </div>
+  <div id="info-display"></div>
+</div>
+
+<!-- RIGHT: Store -->
+<div class="column">
+  <div class="panel" id="upgrades-panel">
+    <h3>Upgrades</h3>
+    <div id="upgrade-list"></div>
+  </div>
+  <div class="panel" id="store-panel" style="margin-top:12px">
+    <h3>Store</h3>
+    <div class="store-row" id="store-cursor">
+      <div class="store-left">
+        <img id="store-cursor-img" class="smallimg" alt="cursor icon">
+        <div><strong>Cursor</strong><div style="font-size:12px">A simple cursor for all your simple needs.</div></div>
+      </div>
+      <div>
+        <button id="buy-cursor-btn">Buy</button>
+        <div class="count" id="cursor-count">0</div>
+      </div>
+    </div>
+    <div class="store-row" id="store-grandma">
+      <div class="store-left">
+        <img id="store-grandma-img" class="smallimg" alt="grandma icon">
+        <div><strong>Grandma</strong><div style="font-size:12px">Hire these old grandmas to click for you!</div></div>
+      </div>
+      <div>
+        <button id="buy-grandma-btn">Buy</button>
+        <div class="count" id="grandma-count">0</div>
+      </div>
+    </div>
+    <div class="store-row" id="store-farm">
+      <div class="store-left">
+        <img id="store-farm-img" class="smallimg" src="https://static.wikia.nocookie.net/cookieclicker/images/1/1a/FarmIconTransparent.png" alt="farm icon">
+        <div>
+          <strong>Farm</strong>
+          <div style="font-size:12px">Farms clicks automatically over time.</div>
+        </div>
+      </div>
+      <div>
+        <button id="buy-farm-btn">Buy</button>
+        <div class="count" id="farm-count">0</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- POPUP -->
+<div id="popup-bg" onclick="if(event.target===this) closePopup()">
+  <div id="popup" role="dialog" aria-modal="true">
+    <img id="popup-icon" alt="">
+    <h3 id="popup-title"></h3>
+    <div id="popup-desc" style="margin:8px 0"></div>
+    <div id="popup-effect" style="font-weight:600;margin-bottom:6px"></div>
+    <div>Cost: <span id="popup-cost"></span> clicks</div>
+    <div style="display:flex;gap:8px;margin-top:10px;justify-content:center">
+      <button id="popup-buy">Buy</button>
+      <button onclick="closePopup()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const cursorOrbitImg = "https://images.vexels.com/media/users/3/131773/isolated/svg/790c78d39fd853ae72167411aa11d727.svg";
+let state = {
+  clicks: 0,
+  cursors: 0,
+  grandmas: 0,
+  farms: 0,
+  cursorCost: 15,
+  grandmaCost: 100,
+  farmCost: 1100,
+  baseCursorCPS: 0.1,
+  baseGrandmaCPS: 1,
+  baseFarmCPS: 8,
+  baseClickPower: 1, // 🆕 Base clicks per click
+  multiplier_click: 1,
+  multiplier_cursor: 1,
+  multiplier_grandma: 1,
+  multiplier_farm: 1,
+  thousandFingersMultiplier: 0, // upgrades can boost this multiplier
+  upgrades: [],
+  achievementsUnlocked: []
+};
+
+
+// --- Upgrades List ---
+state.upgrades = [
+  {id:'rif',name:'Reinforced Index Finger',desc:'Doubles cursor effectiveness.',cost:100,reqType:'cursor',reqCount:1,icon:'https://static.wikia.nocookie.net/cookieclicker/images/d/d2/Plain_cursor.png',bought:false,apply:()=>{state.multiplier_cursor*=2; state.multiplier_click *= 2;}},
+  {id:'cream',name:'Carpal Tunnel Prevention Cream',desc:'Doubles cursor effectiveness again.',cost:500,reqType:'cursor',reqCount:1,icon:'https://static.wikia.nocookie.net/cookieclicker/images/0/01/Berrylium_cursor.png',bought:false,apply:()=>{state.multiplier_cursor*=2; state.multiplier_click *= 2;}},
+  {id:'ambi',name:'Ambidextrous',desc:'Doubles cursor effectiveness once more.',cost:10000,reqType:'cursor',reqCount:10,icon:'https://static.wikia.nocookie.net/cookieclicker/images/2/2e/Blueberrylium_cursor.png',bought:false,apply:()=>{state.multiplier_cursor*=2; state.multiplier_click *= 2;}},
+  {id:'tf', name:'Thousand Fingers', desc:'Each non-cursor building adds +0.1 to click power and CPS.', cost:100000, reqType:'cursor', reqCount:25, icon:'https://static.wikia.nocookie.net/cookieclicker/images/a/a9/Chalcedhoney_cursor.png', bought:false, apply:()=>{ state.thousandFingersMultiplier *= 2;}},
+  {id:'tf2', name:'Million Fingers', desc:'Multiplies the gain from Thousand fingers by 5.', cost:10000000, reqType:'cursor', reqCount:50, icon:'https://static.wikia.nocookie.net/cookieclicker/images/0/0c/Buttergold_cursor.png', bought:false, apply:()=>{ state.thousandFingersMultiplier *= 5;}},
+  {id:'tf3', name:'Billion Fingers', desc:'Multiplies the gain from Thousand fingers by 10.', cost:100000000, reqType:'cursor', reqCount:100, icon:'https://static.wikia.nocookie.net/cookieclicker/images/f/f2/Sugarmuck_cursor.png', bought:false, apply:()=>{ state.thousandFingersMultiplier *= 10;}},
+  {id:'g1',name:'Forwards from grandma',desc:'Doubles grandma effectiveness.',cost:1000,reqType:'grandma',reqCount:1,icon:'https://static.wikia.nocookie.net/cookieclicker/images/0/00/Plain_grandma.png',bought:false,apply:()=>{state.multiplier_grandma*=2}},
+  {id:'g2',name:'Steel-plated rolling pins',desc:'Doubles grandma effectiveness again.',cost:5000,reqType:'grandma',reqCount:5,icon:'https://static.wikia.nocookie.net/cookieclicker/images/d/dc/Berrylium_grandma.png',bought:false,apply:()=>{state.multiplier_grandma*=2}},
+  {id:'g3',name:'Lubricated dentures',desc:'Doubles grandma effectiveness once more.',cost:50000,reqType:'grandma',reqCount:25,icon:'https://static.wikia.nocookie.net/cookieclicker/images/2/2a/Blueberrylium_grandma.png',bought:false,apply:()=>{state.multiplier_grandma*=2}},
+  {id:'f1',name:'Cheap hoes',desc:'Doubles farm effectiveness.',cost:11000,reqType:'farm',reqCount:1,icon:'https://static.wikia.nocookie.net/cookieclicker/images/2/23/Plain_farm.png',bought:false,apply:()=>{state.multiplier_farm*=2}},
+  {id:'f2',name:'Fertilizer',desc:'Doubles farm effectiveness again.',cost:55000,reqType:'farm',reqCount:5,icon:'https://static.wikia.nocookie.net/cookieclicker/images/0/02/Berrylium_farm.png',bought:false,apply:()=>{state.multiplier_farm*=2}},
+  {id:'f3',name:'Click Trees',desc:'Doubles farm effectiveness once more.',cost:550000,reqType:'farm',reqCount:25,icon:'https://static.wikia.nocookie.net/cookieclicker/images/4/48/Blueberrylium_farm.png',bought:false,apply:()=>{state.multiplier_farm*=2}},
+];
+  
+// --- Achievements List ---
+  const achievements = [
+  {
+    id: "cursor1",
+    name: "Click",
+    icon: "https://static.wikia.nocookie.net/cookieclicker/images/d/d2/Plain_cursor.png",
+    description: "Own a single Cursor.",
+    condition: () => state.cursors >= 1
+  },
+  {
+    id: "cursor2",
+    name: "Double Click",
+    icon: "https://static.wikia.nocookie.net/cookieclicker/images/9/9f/Plain_bi-cursor.png",
+    description: "Own 2 Cursors.",
+    condition: () => state.cursors >= 2
+  },
+  {
+    id: "cursor3",
+    name: "Mouse Wheel",
+    icon: "https://static.wikia.nocookie.net/cookieclicker/images/d/da/Plain_tri-cursor.png",
+    description: "Own 25 Cursors.",
+    condition: () => state.cursors >= 25
+  },
+  {
+    id: "grandma1",
+    name: "Grandma's cookies",
+    icon: "https://static.wikia.nocookie.net/cookieclicker/images/0/00/Plain_grandma.png",
+    description: "Hire your first grandma.",
+    condition: () => state.grandmas >= 1
+  },
+  {
+    id: "grandma2",
+    name: "Sloppy kisses",
+    icon: "https://static.wikia.nocookie.net/cookieclicker/images/d/dc/Berrylium_grandma.png",
+    description: "Hire 50 grandmas.",
+    condition: () => state.grandmas >= 50
+  },
+  {
+    id: "grandma3",
+    name: "Retirement home",
+    icon: "https://static.wikia.nocookie.net/cookieclicker/images/2/2a/Blueberrylium_grandma.png",
+    description: "Hire 100 grandmas.",
+    condition: () => state.grandmas >= 100
+  },
+  {
+    id: "click1",
+    name: "Clicktastic",
+    icon: "https://static.wikia.nocookie.net/cookieclicker/images/f/fc/Plain_mouse.png",
+    description: "Make 1000 clicks from clicking.",
+    condition: () => state.clicks >= 1000
+  }
+];
+
+
+// --- Elements ---
+const clickCircle = document.getElementById("click-circle");
+const clickCountEl = document.getElementById("clicks");
+const cpsEl = document.getElementById("cps");
+const cursorContainer = document.getElementById("cursor-container");
+const upgradeListEl = document.getElementById("upgrade-list");
+document.getElementById("store-cursor-img").src = cursorOrbitImg;
+document.getElementById("store-grandma-img").src = "https://static.wikia.nocookie.net/cookieclicker/images/a/a0/GrandmaIconTransparent.png";
+document.getElementById("store-farm-img").src = "https://static.wikia.nocookie.net/cookieclicker/images/1/1a/FarmIconTransparent.png";
+
+// --- Display ---
+function getCPS() {
+  let cps =
+      (state.cursors * state.baseCursorCPS * state.multiplier_cursor) +
+      (state.grandmas * state.baseGrandmaCPS * state.multiplier_grandma) +
+      (state.farms * state.baseFarmCPS * state.multiplier_farm);
+
+  // Add Thousand Fingers CPS
+  let nonCursorBuildings = state.grandmas += state.farms; 
+  cps += nonCursorBuildings * 0.1 * state.thousandFingersMultiplier;
+
+  return cps;
+}
+
+function updateDisplay(){
+  clickCountEl.textContent = "Clicks: " + Math.floor(state.clicks);
+  cpsEl.textContent = "CPS: " + getCPS().toFixed(2);
+  document.getElementById("cursor-count").textContent = state.cursors;
+  document.getElementById("grandma-count").textContent = state.grandmas;
+  document.getElementById("farm-count").textContent = state.farms;
+  document.getElementById("buy-cursor-btn").textContent = `Buy (${state.cursorCost})`;
+  document.getElementById("buy-grandma-btn").textContent = `Buy (${state.grandmaCost})`;
+    document.getElementById("buy-farm-btn").textContent = `Buy (${state.farmCost})`;
   updateUpgradeList();
 }
 
@@ -445,6 +891,88 @@ function showUpgradesProgress(){
   const info = document.getElementById("info-display");
   info.innerHTML = "";
 
+  const total = state.upgrades.length;
+  const owned = state.upgrades.filter(u=>u.bought).length;
+  const percentage = ((owned/total)*100).toFixed(0);
+
+  // Progress text
+  const progText = document.createElement("div");
+  progText.style.marginBottom = "8px";
+  progText.textContent = `${owned} / ${total} Upgrades (${percentage}%)`;
+  info.appendChild(progText);
+
+  // Grid container
+  const grid = document.createElement("div");
+  grid.style.display = "grid";
+  grid.style.gridTemplateColumns = "repeat(auto-fill, 50px)";
+  grid.style.gap = "6px";
+  info.appendChild(grid);
+
+  state.upgrades.forEach(u=>{
+    const img = document.createElement("img");
+    img.src = u.icon;
+    img.title = u.name;
+    img.style.width = "50px";
+    img.style.height = "50px";
+    img.style.objectFit = "contain";
+    img.style.borderRadius = "4px";
+
+    if(!u.bought){
+      img.style.background = "#000"; // vantablack silhouette
+      img.style.filter = "brightness(0)"; // ensure fully black
+    }
+
+    grid.appendChild(img);
+  });
+}
+
+// --- Info Buttons ---
+document.getElementById("btn-upgrades-progress").onclick = showUpgradesProgress;
+
+// --- Thousand Fingers effect already in place ---
+// getCPS() and clickCircle listener already use:
+// cps += nonCursorBuildings * 0.1 * state.thousandFingersMultiplier;
+// gain += nonCursorBuildings * 0.1 * state.thousandFingersMultiplier;
+  
+  function checkAchievements() {
+  for (let ach of achievements) {
+    if (!state.achievementsUnlocked.includes(ach.id) && ach.condition()) {
+      state.achievementsUnlocked.push(ach.id);
+      showAchievementPopup(ach);
+    }
+  }
+}
+
+function showAchievementPopup(ach) {
+  const container = document.getElementById("achievement-container");
+  const popup = document.createElement("div");
+  popup.className = "achievement-popup";
+
+  popup.innerHTML = `
+    <img src="${ach.icon}" alt="${ach.name}">
+    <div>
+      <strong>${ach.name}</strong><br>
+      <span style="font-size:12px;color:#bbb">${ach.description}</span>
+    </div>
+  `;
+
+  container.appendChild(popup);
+
+  // Remove after fade animation
+  setTimeout(() => {
+    popup.remove();
+  }, 5000);
+}
+
+
+updateDisplay();
+</script>
+  
+  <!-- Achievement notifications -->
+<div id="achievement-container"></div>
+  
+</body>
+</html>
   const total = state.upgrades.length;
   const owned = state.upgrades.filter(u=>u.bought).length;
   const percentage = ((owned/total)*100).toFixed(0);
