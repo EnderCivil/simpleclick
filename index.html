@@ -51,7 +51,7 @@ button{background:var(--card);border:1px solid #aaa;padding:7px 10px;border-radi
   <div id="middle-buttons">
     <button id="btn-updates">Updates</button>
     <button id="btn-settings">Settings</button>
-    <button id="btn-upgrades-progress">Upgrades</button>
+    <button id="btn-upgrades-progress">Statistics</button>
   </div>
   <div id="info-display"></div>
 </div>
@@ -185,6 +185,7 @@ function updateDisplay(){
   document.getElementById("farm-count").textContent = state.farms;
   document.getElementById("buy-cursor-btn").textContent = `Buy (${state.cursorCost})`;
   document.getElementById("buy-grandma-btn").textContent = `Buy (${state.grandmaCost})`;
+    document.getElementById("buy-farm-btn").textContent = `Buy (${state.farmCost})`;
   updateUpgradeList();
 }
 
