@@ -447,6 +447,7 @@ state.thousandFingersMultiplier = 0; // if you kept old semicolon, remove it
   const total = state.upgrades.length;
   const owned = state.upgrades.filter(u=>u.bought).length;
   const percentage = ((owned/total)*100).toFixed(0);
+  const info = document.getElementById("info-display");
 
   // Progress text
   const progText = document.createElement("div");
