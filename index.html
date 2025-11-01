@@ -567,6 +567,32 @@ function showAchievementPopup(ach) {
 }
 
   // === Dev Console Commands ===
+
+  window.dev = {
+  help() {
+    console.log("%c=== Dev Console Commands ===", "color: #ffcc00; font-weight: bold;");
+
+    console.log("%cClick Commands:", "color: #00eaff");
+    console.log("  clicks.give(amount)");
+    console.log("  clicks.set(amount)");
+
+    console.log("%cBuilding Commands:", "color: #7aff7a");
+    console.log('  buildings.give("cursor", amount)');
+    console.log('  buildings.give("grandma", amount)');
+    console.log('  buildings.give("farm", amount)');
+
+    console.log("%cUpgrade Commands:", "color: #ff7aff");
+    console.log('  upgrades.buy("Upgrade Name")');
+
+    console.log("%cExample Cheats:", "color: #ffa200");
+    console.log("  clicks.give(100000)");
+    console.log('  buildings.give("cursor", 100)');
+    console.log('  upgrades.buy("Thousand Fingers")');
+
+    console.log("%c(You can also type state to view raw game data)", "color: #ccc");
+  }
+};
+
 window.clicks = {
   give(amount) {
     state.clicks += Number(amount);
