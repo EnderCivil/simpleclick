@@ -30,6 +30,47 @@ button{background:var(--card);border:1px solid #aaa;padding:7px 10px;border-radi
 #popup img{width:48px;height:48px;display:block;margin:0 auto 8px}
 .locked{opacity:0.5;pointer-events:none}
 .note{font-size:12px;color:#444;margin-top:6px}
+#achievement-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.achievement-popup {
+  background: rgba(30, 30, 30, 0.95);
+  color: white;
+  padding: 10px 14px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  opacity: 0;
+  transform: translateX(100%);
+  animation: slideIn 0.4s forwards, fadeOut 0.4s ease forwards 4s;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.achievement-popup img {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(100%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadeOut {
+  to { opacity: 0; transform: translateX(100%); }
+}
+
 </style>
 </head>
 <body>
@@ -135,7 +176,8 @@ let state = {
   multiplier_grandma: 1,
   multiplier_farm: 1,
   thousandFingersMultiplier: 0, // upgrades can boost this multiplier
-  upgrades: []
+  upgrades: [],
+  achievementsUnlocked: []
 };
 
 
@@ -155,6 +197,59 @@ state.upgrades = [
   {id:'f3',name:'Click Trees',desc:'Doubles farm effectiveness once more.',cost:550000,reqType:'farm',reqCount:25,icon:'https://static.wikia.nocookie.net/cookieclicker/images/4/48/Blueberrylium_farm.png',bought:false,apply:()=>{state.multiplier_farm*=2}},
 ];
   
+// --- Achievements List ---
+  const achievements = [
+  {
+    id: "cursor1",
+    name: "Click",
+    icon: "https://static.wikia.nocookie.net/cookieclicker/images/d/d2/Plain_cursor.png",
+    description: "Own a single Cursor.",
+    condition: () => state.cursors >= 1
+  },
+  {
+    id: "cursor2",
+    name: "Double Click",
+    icon: "https://static.wikia.nocookie.net/cookieclicker/images/9/9f/Plain_bi-cursor.png",
+    description: "Own 2 Cursors.",
+    condition: () => state.cursors >= 2
+  },
+  {
+    id: "cursor3",
+    name: "Mouse Wheel",
+    icon: "https://static.wikia.nocookie.net/cookieclicker/images/d/da/Plain_tri-cursor.png",
+    description: "Own 25 Cursors.",
+    condition: () => state.cursors >= 25
+  },
+  {
+    id: "grandma1",
+    name: "Grandma's cookies",
+    icon: "https://static.wikia.nocookie.net/cookieclicker/images/0/00/Plain_grandma.png",
+    description: "Hire your first grandma.",
+    condition: () => state.grandmas >= 1
+  },
+  {
+    id: "grandma2",
+    name: "Sloppy kisses",
+    icon: "https://static.wikia.nocookie.net/cookieclicker/images/d/dc/Berrylium_grandma.png",
+    description: "Hire 50 grandmas.",
+    condition: () => state.grandmas >= 50
+  },
+  {
+    id: "grandma3",
+    name: "Retirement home",
+    icon: "https://static.wikia.nocookie.net/cookieclicker/images/2/2a/Blueberrylium_grandma.png",
+    description: "Hire 100 grandmas.",
+    condition: () => state.grandmas >= 100
+  },
+  {
+    id: "click1",
+    name: "Clicktastic",
+    icon: "https://static.wikia.nocookie.net/cookieclicker/images/f/fc/Plain_mouse.png",
+    description: "Make 1000 clicks from clicking.",
+    condition: () => state.clicks >= 1000
+  }
+];
+
 
 // --- Elements ---
 const clickCircle = document.getElementById("click-circle");
@@ -197,16 +292,19 @@ clickCircle.addEventListener("click", () => {
   let gain = state.baseClickPower * state.multiplier_click;
 
   // Thousand Fingers effect: every non-cursor building contributes
-  let nonCursorBuildings = state.grandmas + state.farms; // include more types if you have them
-  gain += nonCursorBuildings * 0.1 * state.thousandFingersMultiplier; // 0.1 per building
+  let nonCursorBuildings = state.grandmas + state.farms;
+  gain += nonCursorBuildings * 0.1 * state.thousandFingersMultiplier;
 
   state.clicks += gain;
   updateDisplay();
+
+  checkAchievements(); // 👈 Check for new achievements when clicking
 
   // Click animation
   clickCircle.style.transform = "translate(-50%, -50%) scale(1.1)";
   setTimeout(() => clickCircle.style.transform = "translate(-50%, -50%) scale(1)", 80);
 });
+
 
 
 
@@ -218,6 +316,7 @@ function buyCursor(){
     state.cursorCost=Math.floor(15*Math.pow(1.15,state.cursors));
     addOrbitingCursor();
     updateDisplay();
+    checkAchievements();
   }
 }
 function buyGrandma(){
@@ -226,6 +325,7 @@ function buyGrandma(){
     state.grandmas++;
     state.grandmaCost=Math.floor(100*Math.pow(1.15,state.grandmas));
     updateDisplay();
+    checkAchievements();
   }
 }
 function buyFarm(){
@@ -234,6 +334,7 @@ function buyFarm(){
     state.farms++;
     state.farmCost=Math.floor(100*Math.pow(1.15,state.farms));
     updateDisplay();
+    checkAchievements();
   }
 }
 document.getElementById("buy-cursor-btn").onclick=buyCursor;
@@ -250,7 +351,7 @@ function addOrbitingCursor(){
 function positionCursors(angleOffset){
   const cursors=[...cursorContainer.children];
   const baseRadius=80;
-  const perRing=80;
+  const perRing=25;
   let index=0,layer=0;
   while(index<cursors.length){
     const countInRing=Math.min(perRing,cursors.length-index);
@@ -386,8 +487,43 @@ document.getElementById("btn-upgrades-progress").onclick = showUpgradesProgress;
 // getCPS() and clickCircle listener already use:
 // cps += nonCursorBuildings * 0.1 * state.thousandFingersMultiplier;
 // gain += nonCursorBuildings * 0.1 * state.thousandFingersMultiplier;
+  
+  function checkAchievements() {
+  for (let ach of achievements) {
+    if (!state.achievementsUnlocked.includes(ach.id) && ach.condition()) {
+      state.achievementsUnlocked.push(ach.id);
+      showAchievementPopup(ach);
+    }
+  }
+}
+
+function showAchievementPopup(ach) {
+  const container = document.getElementById("achievement-container");
+  const popup = document.createElement("div");
+  popup.className = "achievement-popup";
+
+  popup.innerHTML = `
+    <img src="${ach.icon}" alt="${ach.name}">
+    <div>
+      <strong>${ach.name}</strong><br>
+      <span style="font-size:12px;color:#bbb">${ach.description}</span>
+    </div>
+  `;
+
+  container.appendChild(popup);
+
+  // Remove after fade animation
+  setTimeout(() => {
+    popup.remove();
+  }, 5000);
+}
+
 
 updateDisplay();
 </script>
+  
+  <!-- Achievement notifications -->
+<div id="achievement-container"></div>
+  
 </body>
 </html>
