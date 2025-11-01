@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Circle Clicker — full upgrade version</title>
+<title>Circle Clicker — fixed</title>
 <style>
 :root{--bg:#f2f2f2;--card:#fff;--muted:#ddd}
 body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#111;min-height:100vh;display:flex;gap:10px}
@@ -170,12 +170,12 @@ let state = {
   baseCursorCPS: 0.1,
   baseGrandmaCPS: 1,
   baseFarmCPS: 8,
-  baseClickPower: 1, // 🆕 Base clicks per click
+  baseClickPower: 1, // Base clicks per click
   multiplier_click: 1,
   multiplier_cursor: 1,
   multiplier_grandma: 1,
   multiplier_farm: 1,
-  thousandFingersMultiplier: 0, // upgrades can boost this multiplier
+  thousandFingersMultiplier: 0, // starts at 0; upgrade will enable
   upgrades: [],
   achievementsUnlocked: []
 };
@@ -186,9 +186,9 @@ state.upgrades = [
   {id:'rif',name:'Reinforced Index Finger',desc:'Doubles cursor effectiveness.',cost:100,reqType:'cursor',reqCount:1,icon:'https://static.wikia.nocookie.net/cookieclicker/images/d/d2/Plain_cursor.png',bought:false,apply:()=>{state.multiplier_cursor*=2; state.multiplier_click *= 2;}},
   {id:'cream',name:'Carpal Tunnel Prevention Cream',desc:'Doubles cursor effectiveness again.',cost:500,reqType:'cursor',reqCount:1,icon:'https://static.wikia.nocookie.net/cookieclicker/images/0/01/Berrylium_cursor.png',bought:false,apply:()=>{state.multiplier_cursor*=2; state.multiplier_click *= 2;}},
   {id:'ambi',name:'Ambidextrous',desc:'Doubles cursor effectiveness once more.',cost:10000,reqType:'cursor',reqCount:10,icon:'https://static.wikia.nocookie.net/cookieclicker/images/2/2e/Blueberrylium_cursor.png',bought:false,apply:()=>{state.multiplier_cursor*=2; state.multiplier_click *= 2;}},
-  {id:'tf', name:'Thousand Fingers', desc:'Each non-cursor building adds +0.1 to click power and CPS.', cost:100000, reqType:'cursor', reqCount:25, icon:'https://static.wikia.nocookie.net/cookieclicker/images/a/a9/Chalcedhoney_cursor.png', bought:false, apply:()=>{ state.thousandFingersMultiplier *= 2;}},
-  {id:'tf2', name:'Million Fingers', desc:'Multiplies the gain from Thousand fingers by 5.', cost:10000000, reqType:'cursor', reqCount:50, icon:'https://static.wikia.nocookie.net/cookieclicker/images/0/0c/Buttergold_cursor.png', bought:false, apply:()=>{ state.thousandFingersMultiplier *= 5;}},
-  {id:'tf3', name:'Billion Fingers', desc:'Multiplies the gain from Thousand fingers by 10.', cost:100000000, reqType:'cursor', reqCount:100, icon:'https://static.wikia.nocookie.net/cookieclicker/images/f/f2/Sugarmuck_cursor.png', bought:false, apply:()=>{ state.thousandFingersMultiplier *= 10;}},
+  {id:'tf', name:'Thousand Fingers', desc:'Each non-cursor building adds +0.1 to click power and CPS.', cost:100000, reqType:'cursor', reqCount:25, icon:'https://static.wikia.nocookie.net/cookieclicker/images/a/a9/Chalcedhoney_cursor.png', bought:false, apply:()=>{ state.thousandFingersMultiplier = 1; }},
+  {id:'tf2', name:'Million Fingers', desc:'Multiplies the gain from Thousand fingers by 5.', cost:10000000, reqType:'cursor', reqCount:50, icon:'https://static.wikia.nocookie.net/cookieclicker/images/0/0c/Buttergold_cursor.png', bought:false, apply:()=>{ state.thousandFingersMultiplier *= 5; }},
+  {id:'tf3', name:'Billion Fingers', desc:'Multiplies the gain from Thousand fingers by 10.', cost:100000000, reqType:'cursor', reqCount:100, icon:'https://static.wikia.nocookie.net/cookieclicker/images/f/f2/Sugarmuck_cursor.png', bought:false, apply:()=>{ state.thousandFingersMultiplier *= 10; }},
   {id:'g1',name:'Forwards from grandma',desc:'Doubles grandma effectiveness.',cost:1000,reqType:'grandma',reqCount:1,icon:'https://static.wikia.nocookie.net/cookieclicker/images/0/00/Plain_grandma.png',bought:false,apply:()=>{state.multiplier_grandma*=2}},
   {id:'g2',name:'Steel-plated rolling pins',desc:'Doubles grandma effectiveness again.',cost:5000,reqType:'grandma',reqCount:5,icon:'https://static.wikia.nocookie.net/cookieclicker/images/d/dc/Berrylium_grandma.png',bought:false,apply:()=>{state.multiplier_grandma*=2}},
   {id:'g3',name:'Lubricated dentures',desc:'Doubles grandma effectiveness once more.',cost:50000,reqType:'grandma',reqCount:25,icon:'https://static.wikia.nocookie.net/cookieclicker/images/2/2a/Blueberrylium_grandma.png',bought:false,apply:()=>{state.multiplier_grandma*=2}},
@@ -269,7 +269,7 @@ function getCPS() {
       (state.farms * state.baseFarmCPS * state.multiplier_farm);
 
   // Add Thousand Fingers CPS
-  let nonCursorBuildings = state.grandmas += state.farms; 
+  let nonCursorBuildings = state.grandmas + state.farms; 
   cps += nonCursorBuildings * 0.1 * state.thousandFingersMultiplier;
 
   return cps;
@@ -284,8 +284,10 @@ function updateDisplay(){
   document.getElementById("buy-cursor-btn").textContent = `Buy (${state.cursorCost})`;
   document.getElementById("buy-grandma-btn").textContent = `Buy (${state.grandmaCost})`;
     document.getElementById("buy-farm-btn").textContent = `Buy (${state.farmCost})`;
-  if (document.getElementById("info-display").innerHTML.includes("Achievements"))
-  showUpgradesProgress();
+
+  // If the info panel currently shows the upgrades progress, refresh it
+  const infoDisplay = document.getElementById("info-display");
+  if (infoDisplay.dataset.view === 'upgrades') showUpgradesProgress();
 
   updateUpgradeList();
 }
@@ -335,7 +337,7 @@ function buyFarm(){
   if(state.clicks>=state.farmCost){
     state.clicks-=state.farmCost;
     state.farms++;
-    state.farmCost=Math.floor(100*Math.pow(1.15,state.farms));
+    state.farmCost=Math.floor(1100*Math.pow(1.15,state.farms));
     updateDisplay();
     checkAchievements();
   }
@@ -400,17 +402,8 @@ function updateUpgradeList(){
                           <div><strong>${u.name}</strong><div style="font-size:12px">${u.desc}</div></div>
                        </div>
                        <button>Buy (${u.cost})</button>`;
-      
-// Make entire upgrade row clickable (not just the button)
-row.addEventListener("click", () => {
-  if (state.clicks >= u.cost) {
-    state.clicks -= u.cost;
-    u.bought = true;
-    u.apply();
-    updateDisplay();
-  }
-});
-
+      // Show popup when clicked
+      row.addEventListener("click", () => showUpgradePopup(u));
 
       upgradeListEl.appendChild(row);
     }
@@ -422,14 +415,15 @@ function showUpgradePopup(u){
   document.getElementById("popup-icon").src=u.icon;
   document.getElementById("popup-title").textContent=u.name;
   document.getElementById("popup-desc").textContent=u.desc;
-  document.getElementById("popup-effect").textContent=`Effect: Doubles ${u.reqType} effectiveness`;
+  // Use description for effect text when available
+  document.getElementById("popup-effect").textContent = u.desc;
   document.getElementById("popup-cost").textContent=u.cost;
   const buy=document.getElementById("popup-buy");
   buy.onclick=()=>{
     if(state.clicks>=u.cost){
       state.clicks-=u.cost;
       u.bought=true;
-      u.apply();
+      try{ u.apply(); }catch(e){ console.error('upgrade apply error',e); }
       closePopup();
       updateDisplay();
     }
@@ -438,18 +432,27 @@ function showUpgradePopup(u){
 function closePopup(){document.getElementById("popup-bg").style.display="none";}
 
 // --- Info Buttons ---
-document.getElementById("btn-updates").onclick=()=>document.getElementById("info-display").innerHTML="<h3>Patch Notes</h3><ul><li>Upgrades restored and fixed!</li><li>Cursors orbit properly.</li><li>Click counter cleaned.</li></ul>";
-document.getElementById("btn-settings").onclick=()=>document.getElementById("info-display").innerHTML="<h3>Settings</h3><p>Coming soon...</p>";
-// Fix syntax for thousandFingersMultiplier
-state.thousandFingersMultiplier = 0; // if you kept old semicolon, remove it
+document.getElementById("btn-updates").onclick=()=>{
+  const info = document.getElementById("info-display");
+  info.dataset.view = 'updates';
+  info.innerHTML="<h3>Patch Notes</h3><ul><li>Upgrades restored and fixed!</li><li>Cursors orbit properly.</li><li>Click counter cleaned.</li></ul>";
+};
+document.getElementById("btn-settings").onclick=()=>{
+  const info = document.getElementById("info-display");
+  info.dataset.view = 'settings';
+  info.innerHTML="<h3>Settings</h3><p>Coming soon...</p>";
+};
 
 // --- Upgrades Progress Menu ---
+function showUpgradesProgress(){
+  const info = document.getElementById("info-display");
+  info.dataset.view = 'upgrades';
+  info.innerHTML = '<h3>Upgrades Progress</h3>';
+
   const total = state.upgrades.length;
   const owned = state.upgrades.filter(u=>u.bought).length;
   const percentage = ((owned/total)*100).toFixed(0);
-  const info = document.getElementById("info-display");
 
-  // Progress text
   const progText = document.createElement("div");
   progText.style.marginBottom = "8px";
   progText.textContent = `${owned} / ${total} Upgrades (${percentage}%)`;
@@ -472,22 +475,16 @@ state.thousandFingersMultiplier = 0; // if you kept old semicolon, remove it
     img.style.borderRadius = "4px";
 
     if(!u.bought){
-      img.style.background = "#000"; // vantablack silhouette
-      img.style.filter = "brightness(0)"; // ensure fully black
+      img.style.background = "#000"; // silhouette
+      img.style.filter = "brightness(0)";
     }
 
     grid.appendChild(img);
   });
+}
 
-// --- Info Buttons ---
-document.getElementById("btn-upgrades-progress").onclick = showUpgradesProgress;
-
-// --- Thousand Fingers effect already in place ---
-// getCPS() and clickCircle listener already use:
-// cps += nonCursorBuildings * 0.1 * state.thousandFingersMultiplier;
-// gain += nonCursorBuildings * 0.1 * state.thousandFingersMultiplier;
-  
-  function checkAchievements() {
+// --- Achievements ---
+function checkAchievements() {
   for (let ach of achievements) {
     if (!state.achievementsUnlocked.includes(ach.id) && ach.condition()) {
       state.achievementsUnlocked.push(ach.id);
