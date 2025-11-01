@@ -294,15 +294,16 @@ function updateUpgradeList(){
                        </div>
                        <button>Buy (${u.cost})</button>`;
       
-      // Direct purchase, no popup
-      row.querySelector("button").onclick = () => {
-        if(state.clicks >= u.cost){
-          state.clicks -= u.cost;
-          u.bought = true;
-          u.apply();
-          updateDisplay();
-        }
-      };
+// Make entire upgrade row clickable (not just the button)
+row.addEventListener("click", () => {
+  if (state.clicks >= u.cost) {
+    state.clicks -= u.cost;
+    u.bought = true;
+    u.apply();
+    updateDisplay();
+  }
+});
+
 
       upgradeListEl.appendChild(row);
     }
