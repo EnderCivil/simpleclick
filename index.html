@@ -199,6 +199,27 @@ state.upgrades = [
   
 // --- Achievements List ---
   const achievements = [
+    {
+    id: "cps1",
+    name: "Casual clicking",
+    icon: "https://static.wikia.nocookie.net/cookieclicker/images/d/d2/Plain_cursor.png",
+    description: "Earn at least 1 CPS.",
+    condition: () => getCPS() >= 1
+  },
+  {
+    id: "cps2",
+    name: "Hardcore clicking",
+    icon: "https://static.wikia.nocookie.net/cookieclicker/images/9/9f/Plain_bi-cursor.png",
+    description: "Earn at least 10 CPS.",
+    condition: () => getCPS() >= 10
+  },
+  {
+    id: "cps3",
+    name: "Steady cursor stream",
+    icon: "https://static.wikia.nocookie.net/cookieclicker/images/d/da/Plain_tri-cursor.png",
+    description: "Earn at least 100 CPS.",
+    condition: () => getCPS() >= 100
+  },
   {
     id: "cursor1",
     name: "Click",
