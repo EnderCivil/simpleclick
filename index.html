@@ -794,26 +794,7 @@ function loadGame() {
 
   window.dev = {
   help() {
-    console.log("%c=== Dev Console Commands ===", "color: #ffcc00; font-weight: bold;");
-
-    console.log("%cClick Commands:", "color: #00eaff");
-    console.log("  clicks.give(amount)");
-    console.log("  clicks.set(amount)");
-
-    console.log("%cBuilding Commands:", "color: #7aff7a");
-    console.log('  buildings.give("cursor", amount)');
-    console.log('  buildings.give("grandma", amount)');
-    console.log('  buildings.give("farm", amount)');
-
-    console.log("%cUpgrade Commands:", "color: #ff7aff");
-    console.log('  upgrades.buy("Upgrade Name")');
-
-    console.log("%cExample Cheats:", "color: #ffa200");
-    console.log("  clicks.give(100000)");
-    console.log('  buildings.give("cursor", 100)');
-    console.log('  upgrades.buy("Thousand Fingers")');
-
-    console.log("%c(You can also type state to view raw game data)", "color: #ccc");
+   console.log("i couldnt be bothered makin this");
   }
 };
 
@@ -854,6 +835,42 @@ window.upgrades = {
     console.log(`✅ Bought upgrade: ${name}`);
   }
 };
+
+ resetProgress() {
+  if (confirm("Are you sure you want to reset all progress? This cannot be undone.")) {
+    // Reset state to defaults
+    state = {
+      clicks: 0,
+      cursors: 0,
+      grandmas: 0,
+      farms: 0,
+      cursorCost: 15,
+      grandmaCost: 100,
+      farmCost: 1100,
+      baseCursorCPS: 0.1,
+      baseGrandmaCPS: 1,
+      baseFarmCPS: 8,
+      baseClickPower: 1,
+      multiplier_click: 1,
+      multiplier_cursor: 1,
+      multiplier_grandma: 1,
+      multiplier_farm: 1,
+      thousandFingersMultiplier: 0,
+      upgrades: state.upgrades.map(u => ({ ...u, bought: false })), // reset upgrades
+      achievementsUnlocked: []
+    };
+
+    // Clear saved data
+    localStorage.removeItem("simpleClickSave");
+
+    // Remove all orbiting cursors
+    document.getElementById("cursor-container").innerHTML = "";
+
+    updateDisplay();
+    console.log("⚠️ Game progress reset!");
+  }
+}
+
 
 loadGame();
 updateDisplay();
