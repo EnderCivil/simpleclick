@@ -790,14 +790,52 @@ function loadGame() {
   window.addEventListener("beforeunload", saveGame);
 
 
-  // === Dev Console Commands ===
-
-  window.dev = {
+// === Dev Console ===
+window.dev = {
   help() {
-   console.log("i couldnt be bothered makin this");
+    console.log("i couldnt be bothered makin this");
+  },
+
+  resetProgress() {
+    if (confirm("Are you sure you want to reset all progress? This cannot be undone.")) {
+      // Reset state to defaults
+      state = {
+        clicks: 0,
+        cursors: 0,
+        grandmas: 0,
+        farms: 0,
+        cursorCost: 15,
+        grandmaCost: 100,
+        farmCost: 1100,
+        baseCursorCPS: 0.1,
+        baseGrandmaCPS: 1,
+        baseFarmCPS: 8,
+        baseClickPower: 1,
+        multiplier_click: 1,
+        multiplier_cursor: 1,
+        multiplier_grandma: 1,
+        multiplier_farm: 1,
+        thousandFingersMultiplier: 0,
+        upgrades: state.upgrades.map(u => ({ ...u, bought: false })),
+        achievementsUnlocked: []
+      };
+
+      // Clear saved data
+      localStorage.removeItem("simpleClickSave");
+
+      // Remove all orbiting cursors
+      const cursorContainer = document.getElementById("cursor-container");
+      if (cursorContainer) cursorContainer.innerHTML = "";
+
+      // Refresh display
+      updateDisplay();
+
+      console.log("⚠️ Game progress reset!");
+    }
   }
 };
 
+// === Click Commands ===
 window.clicks = {
   give(amount) {
     state.clicks += Number(amount);
@@ -811,6 +849,7 @@ window.clicks = {
   }
 };
 
+// === Building Commands ===
 window.buildings = {
   give(type, amount = 1) {
     const validTypes = ["cursor", "grandma", "farm"];
@@ -825,6 +864,7 @@ window.buildings = {
   }
 };
 
+// === Upgrade Commands ===
 window.upgrades = {
   buy(name) {
     const u = state.upgrades.find(x => x.name === name);
@@ -836,29 +876,6 @@ window.upgrades = {
   }
 };
 
- resetProgress() {
-  if (confirm("Are you sure you want to reset all progress? This cannot be undone.")) {
-    // Reset state to defaults
-    state = {
-      clicks: 0,
-      cursors: 0,
-      grandmas: 0,
-      farms: 0,
-      cursorCost: 15,
-      grandmaCost: 100,
-      farmCost: 1100,
-      baseCursorCPS: 0.1,
-      baseGrandmaCPS: 1,
-      baseFarmCPS: 8,
-      baseClickPower: 1,
-      multiplier_click: 1,
-      multiplier_cursor: 1,
-      multiplier_grandma: 1,
-      multiplier_farm: 1,
-      thousandFingersMultiplier: 0,
-      upgrades: state.upgrades.map(u => ({ ...u, bought: false })), // reset upgrades
-      achievementsUnlocked: []
-    };
 
     // Clear saved data
     localStorage.removeItem("simpleClickSave");
