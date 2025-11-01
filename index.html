@@ -566,6 +566,45 @@ function showAchievementPopup(ach) {
   }, 5000);
 }
 
+  // === Dev Console Commands ===
+window.clicks = {
+  give(amount) {
+    state.clicks += Number(amount);
+    updateDisplay();
+    console.log(`✅ Gave ${amount} clicks!`);
+  },
+  set(amount) {
+    state.clicks = Number(amount);
+    updateDisplay();
+    console.log(`✅ Set clicks to ${amount}`);
+  }
+};
+
+window.buildings = {
+  give(type, amount = 1) {
+    const validTypes = ["cursor", "grandma", "farm"];
+    if (!validTypes.includes(type)) {
+      console.error("❌ Type must be: cursor, grandma, farm");
+      return;
+    }
+    state[type + "s"] += Number(amount);
+    updateDisplay();
+    checkAchievements();
+    console.log(`✅ Gave ${amount} ${type}(s)!`);
+  }
+};
+
+window.upgrades = {
+  buy(name) {
+    const u = state.upgrades.find(x => x.name === name);
+    if (!u) return console.error("❌ Upgrade not found");
+    u.bought = true;
+    try { u.apply(); } catch(e) {}
+    updateDisplay();
+    console.log(`✅ Bought upgrade: ${name}`);
+  }
+};
+
 
 updateDisplay();
 </script>
