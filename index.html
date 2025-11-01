@@ -197,7 +197,7 @@ clickCircle.addEventListener("click", () => {
   let gain = state.baseClickPower * state.multiplier_click;
 
   // Thousand Fingers effect: every non-cursor building contributes
-  let nonCursorBuildings = state.grandmas += state.farms; // include more types if you have them
+  let nonCursorBuildings = state.grandmas + state.farms; // include more types if you have them
   gain += nonCursorBuildings * 0.1 * state.thousandFingersMultiplier; // 0.1 per building
 
   state.clicks += gain;
