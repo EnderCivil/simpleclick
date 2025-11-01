@@ -443,29 +443,31 @@ document.getElementById("btn-settings").onclick=()=>{
   info.innerHTML="<h3>Settings</h3><p>Coming soon...</p>";
 };
 
-// --- Upgrades Progress Menu ---
-function showUpgradesProgress(){
+document.getElementById("btn-upgrades-progress").onclick = showStatistics;
+
+function showStatistics() {
   const info = document.getElementById("info-display");
-  info.dataset.view = 'upgrades';
-  info.innerHTML = '<h3>Upgrades Progress</h3>';
+  info.innerHTML = "<h3>Statistics</h3>";
 
-  const total = state.upgrades.length;
-  const owned = state.upgrades.filter(u=>u.bought).length;
-  const percentage = ((owned/total)*100).toFixed(0);
+  // === Upgrade Progress ===
+  const totalUpgrades = state.upgrades.length;
+  const ownedUpgrades = state.upgrades.filter(u => u.bought).length;
+  const upgradePercent = ((ownedUpgrades / totalUpgrades) * 100).toFixed(0);
 
-  const progText = document.createElement("div");
-  progText.style.marginBottom = "8px";
-  progText.textContent = `${owned} / ${total} Upgrades (${percentage}%)`;
-  info.appendChild(progText);
+  const upgradeSection = document.createElement("div");
+  upgradeSection.innerHTML = `
+    <h4>Upgrades</h4>
+    <div>${ownedUpgrades} / ${totalUpgrades} (${upgradePercent}%)</div>
+  `;
+  info.appendChild(upgradeSection);
 
-  // Grid container
-  const grid = document.createElement("div");
-  grid.style.display = "grid";
-  grid.style.gridTemplateColumns = "repeat(auto-fill, 50px)";
-  grid.style.gap = "6px";
-  info.appendChild(grid);
+  const upgradeGrid = document.createElement("div");
+  upgradeGrid.style.display = "grid";
+  upgradeGrid.style.gridTemplateColumns = "repeat(auto-fill, 50px)";
+  upgradeGrid.style.gap = "6px";
+  upgradeSection.appendChild(upgradeGrid);
 
-  state.upgrades.forEach(u=>{
+  state.upgrades.forEach(u => {
     const img = document.createElement("img");
     img.src = u.icon;
     img.title = u.name;
@@ -473,16 +475,48 @@ function showUpgradesProgress(){
     img.style.height = "50px";
     img.style.objectFit = "contain";
     img.style.borderRadius = "4px";
-
-    if(!u.bought){
-      img.style.background = "#000"; // silhouette
+    if (!u.bought) {
       img.style.filter = "brightness(0)";
+      img.style.opacity = "0.3";
     }
+    upgradeGrid.appendChild(img);
+  });
 
-    grid.appendChild(img);
+  // === Achievement Progress ===
+  const totalAch = achievements.length;
+  const unlockedAch = state.achievementsUnlocked.length;
+  const achPercent = ((unlockedAch / totalAch) * 100).toFixed(0);
+
+  const achSection = document.createElement("div");
+  achSection.style.marginTop = "14px";
+  achSection.innerHTML = `
+    <h4>Achievements</h4>
+    <div>${unlockedAch} / ${totalAch} (${achPercent}%)</div>
+  `;
+  info.appendChild(achSection);
+
+  const achGrid = document.createElement("div");
+  achGrid.style.display = "grid";
+  achGrid.style.gridTemplateColumns = "repeat(auto-fill, 50px)";
+  achGrid.style.gap = "6px";
+  achSection.appendChild(achGrid);
+
+  achievements.forEach(ach => {
+    const img = document.createElement("img");
+    img.src = ach.icon;
+    img.title = ach.name;
+    img.style.width = "50px";
+    img.style.height = "50px";
+    img.style.objectFit = "contain";
+    img.style.borderRadius = "4px";
+    if (!state.achievementsUnlocked.includes(ach.id)) {
+      img.style.filter = "brightness(0)";
+      img.style.opacity = "0.3";
+    }
+    achGrid.appendChild(img);
   });
 }
-
+  
 // --- Achievements ---
 function checkAchievements() {
   for (let ach of achievements) {
