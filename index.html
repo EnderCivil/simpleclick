@@ -766,13 +766,19 @@ function showAchievementPopup(ach) {
   console.log("Game saved");
 }
 // --- Load Game ---
-  function loadGame() {
+function loadGame() {
   const saved = localStorage.getItem("simpleClickSave");
   if (saved) {
     try {
       const parsed = JSON.parse(saved);
-      state = { ...state, ...parsed }; // merge to keep defaults if new fields exist
+      state = { ...state, ...parsed }; // merge saved state
       console.log("📂 Game loaded!");
+
+      // Recreate orbiting cursors
+      for (let i = 0; i < state.cursors; i++) {
+        addOrbitingCursor();
+      }
+
     } catch (e) {
       console.error("❌ Failed to load save:", e);
     }
