@@ -411,7 +411,19 @@ function updateUpgradeList(){
                        </div>
                        <button>Buy (${u.cost})</button>`;
       // Show popup when clicked
-      row.addEventListener("click", () => showUpgradePopup(u));
+      // Buy upgrade immediately when row clicked
+row.addEventListener("click", () => {
+  if (state.clicks >= u.cost) {
+    state.clicks -= u.cost;
+    u.bought = true;
+    try { u.apply(); } catch(e){ console.error('upgrade apply error', e); }
+    updateDisplay();
+    console.log(`✅ Bought upgrade: ${u.name}`);
+  } else {
+    console.log(`❌ Not enough clicks for ${u.name}`);
+  }
+});
+
 
       upgradeListEl.appendChild(row);
     }
